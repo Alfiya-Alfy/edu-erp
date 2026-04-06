@@ -2,14 +2,21 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { MainLayout } from "./components/layout/MainLayout";
 import { Toaster } from "react-hot-toast";
 
-// Feature Imports
-import { StudentList } from "./features/students/StudentList";
-import { ParentForm } from "./features/parents/ParentForm";
-import { AdmissionForm } from "./features/admission/AdmissionForm";
-import { CourseList } from "./features/courses/CourseList";
-import { BatchList } from "./features/batches/BatchList";
-import { PlacementList } from "./features/placements/PlacementList";
-import { Dashboard } from "./features/dashboard/Dashboard";
+// New Module Placeholders
+import { StudentAttendance } from "./features/attendance/StudentAttendance";
+import { StaffAttendance } from "./features/attendance/StaffAttendance";
+import { StaffList } from "./features/staff/StaffList";
+import { FeeStructure } from "./features/finance/FeeStructure";
+import { Payments } from "./features/finance/Payments";
+import { CommunicationLog } from "./features/communication/CommunicationLog";
+import { Reports } from "./features/reports/Reports";
+import { InstitutionSettings } from "./features/settings/InstitutionSettings";
+import { Users } from "./features/settings/Users";
+import { Roles } from "./features/settings/Roles";
+import { Permissions } from "./features/settings/Permissions";
+import { MergeLog } from "./features/settings/MergeLog";
+import { Certificates } from "./features/documents/Certificates";
+import { TC } from "./features/documents/TC";
 
 
 function App() {
@@ -28,6 +35,42 @@ function App() {
           <Route path="courses" element={<CourseList />} />
           <Route path="batches" element={<BatchList />} />
           <Route path="placements" element={<PlacementList />} />
+
+          {/* Attendance Routes */}
+          <Route path="attendance">
+            <Route path="student" element={<StudentAttendance />} />
+            <Route path="staff" element={<StaffAttendance />} />
+          </Route>
+
+          {/* Staff Routes */}
+          <Route path="staff" element={<StaffList />} />
+
+          {/* Finance Routes */}
+          <Route path="finance">
+            <Route path="fees" element={<FeeStructure />} />
+            <Route path="payments" element={<Payments />} />
+          </Route>
+
+          {/* Documents Routes */}
+          <Route path="certificates" element={<Certificates />} />
+          <Route path="tc" element={<TC />} />
+
+          {/* Core App Routes */}
+          <Route path="communication" element={<CommunicationLog />} />
+          <Route path="reports" element={<Reports />} />
+
+          {/* Settings Routes */}
+          <Route path="settings">
+            <Route path="institution" element={<InstitutionSettings />} />
+            <Route path="users" element={<Users />} />
+            <Route path="roles" element={<Roles />} />
+            <Route path="permissions" element={<Permissions />} />
+          </Route>
+
+          {/* Advanced Routes */}
+          <Route path="advanced">
+            <Route path="merge-log" element={<MergeLog />} />
+          </Route>
         </Route>
 
         {/* Catch all redirect */}
