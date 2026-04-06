@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { Table } from "../../components/ui/Table";
-import { Modal } from "../../components/ui/Modal";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
 import { Award, Briefcase, DollarSign, Edit2, Trash2, LayoutGrid, List, Search, Plus, MapPin, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Placement Records View
  * Features a toggle between a management table and a visual Success Gallery.
  */
 export const PlacementList = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("gallery"); // 'gallery' or 'table'
 
@@ -117,7 +117,7 @@ export const PlacementList = () => {
           </div>
           
           <div className="flex justify-center">
-            <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-8 py-4 rounded-3xl text-lg shadow-xl shadow-blue-200">
+            <Button onClick={() => navigate("/placements/new")} className="flex items-center gap-2 px-8 py-4 rounded-3xl text-lg shadow-xl shadow-blue-200">
               <Plus size={24} /> New Record
             </Button>
           </div>
@@ -127,7 +127,7 @@ export const PlacementList = () => {
           title="Placement List"
           columns={columns}
           data={filteredPlacements}
-          onAdd={() => setIsModalOpen(true)}
+          onAdd={() => navigate("/placements/new")}
           onSearch={setSearchQuery}
           actions={() => (
             <div className="flex gap-1">
@@ -137,28 +137,6 @@ export const PlacementList = () => {
           )}
         />
       )}
-
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        title="New Placement Record"
-        size="lg"
-      >
-        <form className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input label="Student" placeholder="Search student name..." required />
-            <Input label="Company" placeholder="e.g. Google, Amazon" required />
-            <Input label="Designation" placeholder="e.g. Frontend Associate" required />
-            <Input label="Package (Annual)" placeholder="e.g. 12 LPA" />
-            <Input label="Location" placeholder="e.g. Bangalore" />
-            <Input label="Joining Date" type="date" />
-          </div>
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">Save Placement</Button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 };
