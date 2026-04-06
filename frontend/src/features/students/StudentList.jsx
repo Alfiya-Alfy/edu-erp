@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { Table } from "../../components/ui/Table";
-import { Modal } from "../../components/ui/Modal";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
 import { Edit2, Trash2, Eye, UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Student Management View
  * Handles Student List, Add/Edit Modal, and Search filtering.
  */
 export const StudentList = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStudent, setSelectedStudent] = useState(null);
 
@@ -48,7 +48,12 @@ export const StudentList = () => {
 
   const actions = (s) => (
     <div className="flex items-center gap-2">
-      <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Eye size={18} /></button>
+      <button 
+        onClick={() => navigate(`/students/${s.id}`)}
+        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+      >
+        <Eye size={18} />
+      </button>
       <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"><Edit2 size={18} /></button>
       <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" onClick={() => handleDelete(s.id)}><Trash2 size={18} /></button>
     </div>
@@ -77,61 +82,11 @@ export const StudentList = () => {
         title="Students"
         columns={columns}
         data={students.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()))}
-        onAdd={() => setIsModalOpen(true)}
+        onAdd={() => navigate("/students/new")}
         onSearch={setSearchQuery}
         actions={actions}
         pagination={{ current: 1, total: 1 }}
       />
-
-      {/* Add Student Modal */}
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        title="Register New Student"
-        size="xl"
-      >
-        <form onSubmit={handleAddStudent} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
-            <Input label="First Name" placeholder="e.g. Ama" required />
-            <Input label="Last Name" placeholder="e.g. Nath" required />
-            
-            <div className="space-y-2 mb-4">
-              <label className="block text-sm font-semibold text-gray-700 ml-1">Gender</label>
-              <select className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 sm:text-sm p-3.5 transition-all outline-none">
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <Input label="Date of Birth" type="date" required />
-            <Input label="Email address" type="email" placeholder="student@example.com" required />
-            <Input label="Phone Number" type="tel" placeholder="e.g. 9876543210" required />
-            
-            <div className="md:col-span-2 lg:col-span-3">
-              <Input label="Address" placeholder="Full residential address" />
-            </div>
-
-            <Input label="City" placeholder="e.g. Kochi" />
-            <Input label="State" placeholder="e.g. Kerala" />
-            <Input label="Pincode" type="number" placeholder="682001" />
-            
-            <Input label="Blood Group" placeholder="e.g. A+" />
-            <Input label="Course" placeholder="Select Course..." required />
-            <Input label="Batch" placeholder="Select Batch..." required />
-          </div>
-          
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-            <Button variant="secondary" type="button" onClick={() => setIsModalOpen(false)}>
-              Discard
-            </Button>
-            <Button type="submit" className="px-8 shadow-xl shadow-blue-200">
-              Save Student Record
-            </Button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 };
