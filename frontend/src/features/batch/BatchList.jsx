@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { Table } from "../../components/ui/Table";
-import { Modal } from "../../components/ui/Modal";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
 import { Layers, Calendar, Edit2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Batch Management View
  * Handles Year-wise and Course-wise Batches.
  */
 export const BatchList = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
   const [batches] = useState([
@@ -52,48 +52,9 @@ export const BatchList = () => {
         title="Batches"
         columns={columns}
         data={batches.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()))}
-        onAdd={() => setIsModalOpen(true)}
+        onAdd={() => navigate("/batches/new")}
         onSearch={setSearchQuery}
       />
-
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        title="Create New Cohort"
-        size="lg"
-      >
-        <form className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-            <Input label="Batch Name" placeholder="e.g. MCA 2024-26 A" required />
-            <Input label="Course" placeholder="Select Course..." required />
-            <Input label="Start Date" type="date" required />
-            <Input label="End Date" type="date" />
-            <Input label="Max Students" type="number" placeholder="e.g. 45" />
-            
-            <div className="space-y-2 mb-4">
-              <label className="block text-sm font-semibold text-gray-700 ml-1">Status</label>
-              <select className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 sm:text-sm p-3.5 transition-all outline-none">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
-
-            <div className="md:col-span-2">
-              <Input label="Class Timing" placeholder="e.g. 9:00 AM - 1:00 PM (Mon-Fri)" />
-            </div>
-          </div>
-          
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
-              Discard
-            </Button>
-            <Button type="submit" className="px-8 shadow-xl shadow-blue-200">
-              Create Batch
-            </Button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 };
