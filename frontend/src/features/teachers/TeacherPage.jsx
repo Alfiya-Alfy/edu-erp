@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { createApi } from "../../api/genericApi";
 import TeacherForm from "./TeacherForm";
-
-const teacherApi = createApi("teachers");
+import staffApi from "../../api/staffApi";
 
 const TeacherPage = () => {
     const [data, setData] = useState([]);
@@ -11,8 +9,8 @@ const TeacherPage = () => {
 
     const fetchData = async () => {
         try {
-            const res = await teacherApi.getAll();
-            setData(Array.isArray(res) ? res : []);
+            const res = await staffApi.getAll();
+            setData(Array.isArray(res.data) ? res.data : []);
         } catch (e) { console.error(e); }
     };
 
@@ -20,7 +18,7 @@ const TeacherPage = () => {
 
     const handleDelete = async (id) => {
         if (window.confirm("Remove teacher?")) {
-            await teacherApi.remove(id);
+            await staffApi.delete(id);
             fetchData();
         }
     };

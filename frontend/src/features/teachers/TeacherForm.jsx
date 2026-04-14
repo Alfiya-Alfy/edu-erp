@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { createApi } from "../../api/genericApi";
-
-const teacherApi = createApi("teachers");
+import staffApi from "../../api/staffApi";
 
 const TeacherForm = ({ close, refresh, editData }) => {
   const [formData, setFormData] = useState({
@@ -22,13 +20,13 @@ const TeacherForm = ({ close, refresh, editData }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (editData) await teacherApi.update(editData._id, formData);
-      else await teacherApi.create(formData);
+      if (editData) await staffApi.update(editData._id, formData);
+      else await staffApi.create(formData);
       refresh();
       close();
     } catch (e) {
       console.error(e);
-      alert(`Save failed! Error: ${e.message}. Please insure MongoDB is running and the backend is connected.`);
+      alert(`Save failed! Error: ${e.message}.`);
     }
 
     setLoading(false);

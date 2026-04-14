@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { 
-    createAttendance, 
-    updateAttendance, 
-    getInstitutions, 
-    getCourses, 
-    getBatches, 
-    getStudents, 
-    getStaff 
-} from "./attendanceApi";
+import attendanceApi from "../../api/attendanceApi";
 
 const AttendanceForm = ({ close, refresh, editData, type = 'students' }) => {
   const [formData, setFormData] = useState({
@@ -36,13 +28,20 @@ const AttendanceForm = ({ close, refresh, editData, type = 'students' }) => {
   useEffect(() => {
     const loadMetadata = async () => {
       try {
-        const [inst, cour, bat, stu, sta] = await Promise.all([
-          getInstitutions(),
-          getCourses(),
-          getBatches(),
-          getStudents(),
-          getStaff()
+        const [instRes, courRes, batRes, stuRes, staRes] = await Promise.all([
+          attendanceApi.getInstitutions(),
+          attendanceApi.getCourses(),
+          attendanceApi.getBatches(),
+          attendanceApi.getStudentsList(),
+          attendanceApi.getStaffList()
         ]);
+
+        const inst = instRes.data;
+        const cour = courRes.data;
+        const bat = batRes.data;
+        const stu = stuRes.data;
+        const sta = staRes.data;
+
         setMetadata({
           institutions: inst,
           courses: cour,
@@ -83,9 +82,11 @@ const AttendanceForm = ({ close, refresh, editData, type = 'students' }) => {
     setLoading(true);
     try {
       if (editData) {
-        await updateAttendance(editData._id, formData, type);
+        if (type === 'students') await attendanceApi.updateStudentAttendance(editData._id, formData);
+        else await attendanceApi.updateTeacherAttendance(editData._id, formData);
       } else {
-        await createAttendance(formData, type);
+        if (type === 'students') await attendanceApi.markStudentAttendance(formData);
+        else await attendanceApi.markTeacherAttendance(formData);
       }
       refresh();
       close();

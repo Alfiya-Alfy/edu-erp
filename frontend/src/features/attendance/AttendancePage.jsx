@@ -1,15 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-    getAttendance,
-    deleteAttendance,
-    createAttendance,
-    updateAttendance,
-    getStudents,
-    getBatches,
-    getInstitutions,
-    getCourses,
-    getStaff
-} from "./attendanceApi";
+import attendanceApi from "../../api/attendanceApi";
 import AttendanceForm from "./AttendanceForm";
 
 const AttendancePage = () => {
@@ -36,16 +26,22 @@ const AttendancePage = () => {
 
     const fetchData = async () => {
         try {
-            const [att, stu, bat, inst, cour, sta] = await Promise.all([
-                getAttendance(type),
-                getStudents(),
-                getBatches(),
-                getInstitutions(),
-                getCourses(),
-                getStaff()
+            const [attRes, stuRes, batRes, instRes, courRes, staRes] = await Promise.all([
+                type === 'students' ? attendanceApi.getStudents(filters.batch_id, filters.date) : attendanceApi.getTeachers(filters.date),
+                attendanceApi.getStudentsList(),
+                attendanceApi.getBatches(),
+                attendanceApi.getInstitutions(),
+                attendanceApi.getCourses(),
+                attendanceApi.getStaffList()
             ]);
-            setLogs(att.data);
-            setMetadata({ students: stu, batches: bat, institutions: inst, courses: cour, staff: sta });
+            setLogs(attRes.data);
+            setMetadata({ 
+                students: stuRes.data, 
+                batches: batRes.data, 
+                institutions: instRes.data, 
+                courses: courRes.data, 
+                staff: staRes.data 
+            });
         } catch (error) {
             console.error("Failed to fetch data:", error);
         }
@@ -53,7 +49,7 @@ const AttendancePage = () => {
 
     useEffect(() => {
         fetchData();
-    }, [type]);
+    }, [type, filters.batch_id, filters.date]);
 
     const markStatus = async (item, status) => {
         const idField = type === 'students' ? 'student_id' : 'staff_id';
@@ -80,9 +76,11 @@ const AttendancePage = () => {
 
         try {
             if (existingLog) {
-                await updateAttendance(existingLog._id, data, type);
+                if (type === 'students') await attendanceApi.updateStudentAttendance(existingLog._id, data);
+                else await attendanceApi.updateTeacherAttendance(existingLog._id, data);
             } else {
-                await createAttendance(data, type);
+                if (type === 'students') await attendanceApi.markStudentAttendance(data);
+                else await attendanceApi.markTeacherAttendance(data);
             }
             fetchData();
         } catch (err) {

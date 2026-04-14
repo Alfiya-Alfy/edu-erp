@@ -42,23 +42,25 @@ let storage = {
     { _id: '5', user_name: 'divya_p' }
   ],
   staff: [
-    { _id: '1', user_id: '1', institution_id: '1', staff_name: 'Ramesh Kumar', designation: 'Trainer', contract_end_date: '2027-03-31', experience_years: 5, qualification: 'B.Tech', status: 'active', email: 'ramesh@gmail.com', department: 'Technology' },
-    { _id: '2', user_id: '2', institution_id: '2', staff_name: 'Suresh Nair', designation: 'Trainer', contract_end_date: '2027-06-30', experience_years: 4, qualification: 'MCA', status: 'active', email: 'suresh.nair@gmail.com', department: 'Technology' },
-    { _id: '3', user_id: '3', institution_id: '1', staff_name: 'Anita Joseph', designation: 'HR Executive', contract_end_date: '2026-12-31', experience_years: 6, qualification: 'MBA HR', status: 'active', email: 'anita@gmail.com', department: 'Human Resources' },
-    { _id: '4', user_id: '4', institution_id: '2', staff_name: 'Rahul Menon', designation: 'Accountant', contract_end_date: '2027-01-15', experience_years: 3, qualification: 'B.Com', status: 'active', email: 'rahul.menon@gmail.com', department: 'Accounts' },
-    { _id: '5', user_id: '5', institution_id: '1', staff_name: 'Divya Pillai', designation: 'Assistant Trainer', contract_end_date: '2026-11-30', experience_years: 2, qualification: 'B.Sc IT', status: 'active', email: 'divya@gmail.com', department: 'Technology' }
+    { _id: '1', user_id: '1', institution_id: '1', staff_name: 'Dr. Sarah Wilson', designation: 'Senior Professor', contract_end_date: '2027-03-31', experience_years: 12, qualification: 'PhD Computer Science', status: 'active', email: 'sarah.wilson@school.edu', department: 'Computer Science' },
+    { _id: '2', user_id: '2', institution_id: '2', staff_name: 'John Miller', designation: 'Assistant Trainer', contract_end_date: '2027-06-30', experience_years: 4, qualification: 'M.Tech', status: 'active', email: 'john.miller@school.edu', department: 'Information Technology' },
+    { _id: '3', user_id: '3', institution_id: '1', staff_name: 'Anita Joseph', designation: 'HR Head', contract_end_date: '2026-12-31', experience_years: 8, qualification: 'MBA HR', status: 'active', email: 'anita.j@school.edu', department: 'Human Resources' },
+    { _id: '4', user_id: '4', institution_id: '2', staff_name: 'Robert Brown', designation: 'Accounts Manager', contract_end_date: '2027-01-15', experience_years: 6, qualification: 'CPA', status: 'active', email: 'robert.b@school.edu', department: 'Finance' },
+    { _id: '5', user_id: '5', institution_id: '1', staff_name: 'Michael Davis', designation: 'Lab assistant', contract_end_date: '2026-11-30', experience_years: 3, qualification: 'B.Sc Physics', status: 'active', email: 'michael.d@school.edu', department: 'Science' }
   ],
-  attendance_students: [],
+  attendance_students: [
+    { _id: '1', student_id: '1', student_name: 'Rahul Kumar', batch_id: '1', institution_id: '1', attendance_date: '2026-04-14', status: 'Present', marked_by: '1', remarks: 'On time' },
+    { _id: '2', student_id: '2', student_name: 'Anjali Nair', batch_id: '2', institution_id: '2', attendance_date: '2026-04-14', status: 'Absent', marked_by: '1', remarks: 'Sick leave' }
+  ],
   attendance_teachers: [
-    { _id: '1', staff_id: '1', staff_name: 'Ramesh Kumar', institution_id: '1', attendance_date: '2026-03-01', status: 'Present' },
-    { _id: '2', staff_id: '2', staff_name: 'Suresh Nair', institution_id: '2', attendance_date: '2026-03-01', status: 'Absent' },
-    { _id: '3', staff_id: '3', staff_name: 'Anita Joseph', institution_id: '1', attendance_date: '2026-03-01', status: 'Present' },
-    { _id: '4', staff_id: '4', staff_name: 'Rahul Menon', institution_id: '2', attendance_date: '2026-03-01', status: 'Present' },
-    { _id: '5', staff_id: '5', staff_name: 'Divya Pillai', institution_id: '1', attendance_date: '2026-03-01', status: 'Absent' }
+    { _id: '1', staff_id: '1', staff_name: 'Dr. Sarah Wilson', institution_id: '1', attendance_date: '2026-04-14', status: 'Present', marked_by: 'admin', remarks: 'Regular' },
+    { _id: '2', staff_id: '2', staff_name: 'John Miller', institution_id: '2', attendance_date: '2026-04-14', status: 'Present', marked_by: 'admin', remarks: 'Regular' },
+    { _id: '3', staff_id: '3', staff_name: 'Anita Joseph', institution_id: '1', attendance_date: '2026-04-14', status: 'Absent', marked_by: 'admin', remarks: 'Holiday' }
   ],
   comms_logs: [
-    { _id: '1', student_id: '1', staff_id: '1', parent_id: '1', institution_id: '1', communication_message: 'Your ward attended all classes today', type: 'sms', subject: 'Attendance Update', delivery_status: 'delivered', sent_at: '2026-03-10', recipient: 'Rahul Kumar', sent_by: 'Ramesh Kumar (Admin)' },
-    { _id: '2', student_id: '2', staff_id: '2', parent_id: '2', institution_id: '2', communication_message: 'Fee payment is pending for this month', type: 'email', subject: 'Fee Reminder', delivery_status: 'sent', sent_at: '2026-03-10', recipient: 'Anjali Nair', sent_by: 'Suresh Nair (Accounts)' }
+    { _id: '1', student_id: '1', staff_id: '1', parent_id: '1', institution_id: '1', communication_message: 'Your ward Rahul Kumar attended all classes today.', type: 'sms', subject: 'Daily Attendance Report', delivery_status: 'delivered', sent_at: '2026-04-14', recipient: 'Rahul Kumar (Parent)', sent_by: 'System' },
+    { _id: '2', student_id: '2', staff_id: '2', parent_id: '2', institution_id: '2', communication_message: 'Fee payment of $500 is due for April.', type: 'email', subject: 'Payment Reminder', delivery_status: 'sent', sent_at: '2026-04-14', recipient: 'Anjali Nair (Parent)', sent_by: 'Finance Dept' },
+    { _id: '3', student_id: '3', staff_id: '1', parent_id: '3', institution_id: '1', communication_message: 'Midterm exam starts next Monday.', type: 'sms', subject: 'Exam Alert', delivery_status: 'failed', sent_at: '2026-04-13', recipient: 'Arjun Menon (Parent)', sent_by: 'Admin' }
   ],
   payments: [],
   certificates: [],

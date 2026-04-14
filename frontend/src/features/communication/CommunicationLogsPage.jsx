@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { createApi } from "../../api/genericApi";
-
-const commsApi = createApi("comms-logs");
+import commsApi from "../../api/commsApi";
 
 const CommunicationLogsPage = () => {
     const [logs, setLogs] = useState([]);
 
     const fetchData = async () => {
         try {
-            const data = await commsApi.getAll();
-            setLogs(data);
+            const res = await commsApi.getLogs();
+            setLogs(res.data);
         } catch (error) {
             console.error("Failed to fetch comms logs:", error);
         }
