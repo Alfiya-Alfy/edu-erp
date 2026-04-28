@@ -9,6 +9,16 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
+// Connection event listeners
+pool.on('connect', () => {
+  console.log('Connected to PostgreSQL Database Backend');
+});
+
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
+
 // Sync connection test
 pool.query('SELECT NOW()', (err, res) => {
   if (err) {

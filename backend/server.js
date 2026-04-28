@@ -7,7 +7,12 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json()); // Parse JSON bodies
+app.use(express.json());
+
+// Routes
+app.get('/', (req, res) => {
+  res.send('EduERP API is running with PostgreSQL...');
+});
 
 // Health Check & DB Test
 app.get('/api/health', async (req, res) => {
@@ -33,6 +38,14 @@ app.get('/api/students', async (req, res) => {
     res.status(500).json({ error: 'Server error fetching students' });
   }
 });
+
+// System Management Routes (Alfiya)
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+app.use('/api/institutions', require('./routes/institutionRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/roles', require('./routes/roleRoutes'));
+app.use('/api/merge-log', require('./routes/mergeLogRoutes'));
 
 // Port & Server Initialization
 const PORT = process.env.PORT || 5000;
