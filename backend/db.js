@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+<<<<<<< HEAD
 require('dotenv').config();
 
 const pool = new Pool({
@@ -26,6 +27,15 @@ pool.query('SELECT NOW()', (err, res) => {
   } else {
     console.log('Database connected at:', res.rows[0].now);
   }
+=======
+
+const pool = new Pool({
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
+    database: process.env.DB_NAME || 'erp_db',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
+>>>>>>> origin/feature/amaljith-finance
 });
 
 module.exports = pool;

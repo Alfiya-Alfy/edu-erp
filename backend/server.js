@@ -47,6 +47,18 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/roles', require('./routes/roleRoutes'));
 app.use('/api/merge-log', require('./routes/mergeLogRoutes'));
 
+// Finance & Documents Routes (Amaljith)
+app.use('/api/payments', require('./routes/payments'));
+app.use('/api/fee-structure', require('./routes/feeStructure'));
+app.use('/api/certificates', require('./routes/certificates'));
+app.use('/api/tc', require('./routes/tc'));
+
+// Global error handler
+app.use((err, req, res, _next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Internal Server Error' });
+});
+
 // Port & Server Initialization
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
