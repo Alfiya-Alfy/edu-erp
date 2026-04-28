@@ -1,12 +1,17 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
+<<<<<<< HEAD
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+=======
+  baseURL: 'http://localhost:5000/api',
+>>>>>>> origin/feature/ashvel-attendance
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+<<<<<<< HEAD
 // Request Interceptor: Add Multi-tenancy & Auth Headers
 apiClient.interceptors.request.use(
   (config) => {
@@ -53,4 +58,6 @@ apiClient.interceptors.response.use(
 );
 
 export const api = apiClient;
+=======
+>>>>>>> origin/feature/ashvel-attendance
 export default apiClient;
