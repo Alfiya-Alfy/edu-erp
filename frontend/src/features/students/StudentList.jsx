@@ -1,92 +1,152 @@
-import { useState } from "react";
-import { Table } from "../../components/ui/Table";
-import { Input } from "../../components/ui/Input";
-import { Button } from "../../components/ui/Button";
-import { Edit2, Trash2, Eye, UserPlus } from "lucide-react";
-import toast from "react-hot-toast";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Edit2, Eye, Trash2, Mail, Phone, GraduationCap } from "lucide-react";
+import { supabase } from "../../api/supabase";
+import { Table } from "../../components/ui/Table";
+import toast from "react-hot-toast";
 
 /**
  * Student Management View
- * Handles Student List, Add/Edit Modal, and Search filtering.
+ * Now connected to Supabase for direct data fetching.
  */
-export const StudentList = () => {
+export function StudentList() {
   const navigate = useNavigate();
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStudent, setSelectedStudent] = useState(null);
 
-  // Mock Data for the Academic Module build
-  const [students, setStudents] = useState([
-    { id: "S1001", name: "Amal Nath", email: "amal@gmail.com", course: "BCA", batch: "2023-26", status: "Active" },
-    { id: "S1002", name: "Riya S", email: "riya@hotmail.com", course: "MCA", batch: "2024-26", status: "Active" },
-    { id: "S1003", name: "Kevin V", email: "kevin@gmail.com", course: "B.Tech", batch: "2022-26", status: "On-Hold" },
-    { id: "S1004", name: "Sneha Nair", email: "sneha@outlook.com", course: "BCA", batch: "2023-26", status: "Active" },
-    { id: "S1005", name: "Arjun K", email: "arjun@gmail.com", course: "MCA", batch: "2024-26", status: "Active" },
-  ]);
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  async function fetchStudents() {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      setStudents(data || []);
+    } catch (err) {
+      console.error("Error fetching students:", err);
+      toast.error("Failed to load students: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const filteredStudents = students.filter(student => 
+    (student.student_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (student.email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (student.student_id || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const columns = [
-    { header: "ID", accessor: "id" },
-    { header: "Name", accessor: "name", render: (s) => (
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
-          {s.name[0]}
+    { 
+      header: "Student", 
+      accessor: "student_name",
+      render: (s) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold border border-blue-100">
+            {(s.first_name || s.student_name || "?")[0]}
+          </div>
+          <div>
+            <p className="font-bold text-gray-900">{s.student_name || `${s.first_name} ${s.last_name}`}</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{s.student_id}</p>
+          </div>
         </div>
-        <span className="font-medium text-gray-900">{s.name}</span>
-      </div>
-    )},
-    { header: "Email", accessor: "email" },
-    { header: "Course", accessor: "course" },
-    { header: "Batch", accessor: "batch" },
-    { header: "Status", accessor: "status", render: (s) => (
-      <span className={`px-2 py-1 rounded-lg text-xs font-semibold ${
-        s.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-      }`}>
-        {s.status}
-      </span>
-    )},
+      )
+    },
+    { 
+      header: "Contact", 
+      accessor: "email",
+      render: (s) => (
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5 text-gray-600">
+            <Mail size={12} className="text-gray-400" />
+            <span className="text-xs font-medium">{s.email}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-gray-600">
+            <Phone size={12} className="text-gray-400" />
+            <span className="text-xs font-medium">{s.phone_number}</span>
+          </div>
+        </div>
+      )
+    },
+    { 
+      header: "Academic", 
+      accessor: "course_id",
+      render: (s) => (
+        <div className="flex items-center gap-2">
+          <GraduationCap size={16} className="text-emerald-500" />
+          <div>
+             <p className="text-sm font-bold text-gray-700">{s.course_id || "Unassigned"}</p>
+             <p className="text-[10px] text-gray-400 font-bold uppercase">{s.batch_id || "No Batch"}</p>
+          </div>
+        </div>
+      )
+    },
+    { 
+      header: "Status", 
+      accessor: "status",
+      render: (s) => (
+        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${
+          s.status === 'Active' 
+            ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+            : 'bg-gray-50 text-gray-500 border-gray-100'
+        }`}>
+          {s.status || 'Active'}
+        </span>
+      )
+    }
   ];
 
-  const actions = (s) => (
-    <div className="flex items-center gap-2">
-      <button 
-        onClick={() => navigate(`/students/${s.id}`)}
-        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-      >
-        <Eye size={18} />
-      </button>
-      <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"><Edit2 size={18} /></button>
-      <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" onClick={() => handleDelete(s.id)}><Trash2 size={18} /></button>
-    </div>
-  );
-
-  const handleDelete = (id) => {
-    toast.success("Student record scheduled for deletion");
-  };
-
-  const handleAddStudent = (e) => {
-    e.preventDefault();
-    toast.success("Student added successfully (Mock)");
-    setIsModalOpen(false);
-  };
+  if (loading && students.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-20 space-y-4">
+        <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+        <p className="text-gray-500 font-bold animate-pulse">Fetching records from Supabase...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Student Directory</h1>
-          <p className="text-gray-500 mt-1 font-medium italic">Manage and track student records across all batches.</p>
-        </div>
-      </div>
-
-      <Table
-        title="Students"
-        columns={columns}
-        data={students.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()))}
-        onAdd={() => navigate("/students/new")}
-        onSearch={setSearchQuery}
-        actions={actions}
-        pagination={{ current: 1, total: 1 }}
-      />
+    <div className="w-full space-y-6 animate-in fade-in duration-500">
+       <Table
+          title="Students"
+          data={filteredStudents}
+          columns={columns}
+          onAdd={() => navigate("/students/new")}
+          onSearch={setSearchQuery}
+          actions={(s) => (
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={() => navigate(`/students/${s.student_id}`)}
+                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                title="View Profile"
+              >
+                <Eye size={18} />
+              </button>
+              <button 
+                className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+                title="Edit"
+              >
+                <Edit2 size={18} />
+              </button>
+              <button 
+                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                title="Delete"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          )}
+        />
     </div>
   );
-};
+}
+
+export default StudentList;
+

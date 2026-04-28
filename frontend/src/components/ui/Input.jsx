@@ -11,7 +11,7 @@ export const Input = ({
   className, 
   ...props 
 }) => {
-  const baseInputStyles = "block w-full rounded-xl border border-gray-200 bg-gray-50/50 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 sm:text-sm p-3.5 transition-all duration-200 outline-none hover:bg-white focus:bg-white placeholder:text-gray-400";
+  const baseInputStyles = "block w-full rounded-xl border border-gray-200 bg-gray-50/50 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 sm:text-sm p-3.5 transition-all duration-200 outline-none hover:bg-white focus:bg-white placeholder:text-gray-400 text-gray-900 font-medium";
   const errorInputStyles = "border-red-200 text-red-900 placeholder-red-300 focus:ring-red-500/10 focus:border-red-500 bg-red-50/30";
   
   return (

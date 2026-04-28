@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Table } from "../../components/ui/Table";
-import { Input } from "../../components/ui/Input";
-import { Button } from "../../components/ui/Button";
-import { Award, Briefcase, DollarSign, Edit2, Trash2, LayoutGrid, List, Search, Plus, MapPin, Calendar } from "lucide-react";
+import { Award, Briefcase, Edit2, Trash2, LayoutGrid, List, MapPin, Calendar, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../../api/supabase";
 
 /**
  * Placement Records View
@@ -15,42 +14,69 @@ export const PlacementList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("gallery"); // 'gallery' or 'table'
 
-  const [placements] = useState([
-    { id: "PL101", student: "Amal Nath", company: "TCS", role: "Software Engineer", salary: "₹6.5 LPA", date: "2024-03-15", location: "Kochi" },
-    { id: "PL102", student: "Riya S", company: "Infosys", role: "UI/UX Designer", salary: "₹5.8 LPA", date: "2024-03-20", location: "Bangalore" },
-    { id: "PL103", student: "Kevin V", company: "Amazon", role: "SDE-1", salary: "₹18 LPA", date: "2024-03-25", location: "Hyderabad" },
-    { id: "PL104", student: "Sneha Nair", company: "Meta", role: "Product Designer", salary: "₹20 LPA", date: "2024-03-28", location: "London" },
-    { id: "PL105", student: "Arjun K", company: "Netflix", role: "Backend Engineer", salary: "₹22 LPA", date: "2024-03-30", location: "California" },
-  ]);
+  const [placements, setPlacements] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPlacements();
+  }, []);
+
+  async function fetchPlacements() {
+    try {
+      setLoading(true);
+      // Joining with students table to get student_name
+      const { data, error } = await supabase
+        .from('placement_records')
+        .select('*, students(student_name)')
+        .order('placement_date', { ascending: false });
+        
+      if (error) throw error;
+      setPlacements(data || []);
+    } catch (err) {
+      console.error("Supabase Error:", err.message);
+      toast.error("Error fetching placement_records");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const filteredPlacements = placements.filter(p => 
-    p.student.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    p.company.toLowerCase().includes(searchQuery.toLowerCase())
+    (p.students?.student_name || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (p.company_name || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const columns = [
-    { header: "Student", accessor: "student", render: (p) => (
+    { header: "Student", accessor: "students.student_name", render: (p) => (
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">
-          {p.student[0]}
+          {(p.students?.student_name || "?")[0]}
         </div>
-        <span className="font-semibold text-gray-900">{p.student}</span>
+        <span className="font-semibold text-gray-900">{p.students?.student_name || p.student_id}</span>
       </div>
     )},
-    { header: "Company", accessor: "company", render: (p) => (
+    { header: "Company", accessor: "company_name", render: (p) => (
       <span className="px-2.5 py-1 rounded-lg bg-gray-100 text-gray-700 text-xs font-bold uppercase tracking-wider border border-gray-200">
-        {p.company}
+        {p.company_name}
       </span>
     )},
-    { header: "Role", accessor: "role", render: (p) => <span className="text-gray-600 font-medium">{p.role}</span> },
-    { header: "Package", accessor: "salary", render: (p) => <span className="text-emerald-600 font-black">{p.salary}</span> },
-    { header: "Location", accessor: "location", render: (p) => (
+    { header: "Role", accessor: "job_role", render: (p) => <span className="text-gray-600 font-medium">{p.job_role}</span> },
+    { header: "Package", accessor: "salary_package", render: (p) => <span className="text-emerald-600 font-black">{p.salary_package}</span> },
+    { header: "Location", accessor: "placement_location", render: (p) => (
       <div className="flex items-center gap-1 text-gray-400">
         <MapPin size={12} />
-        <span className="text-xs">{p.location}</span>
+        <span className="text-xs">{p.placement_location}</span>
       </div>
     )},
   ];
+
+  if (loading && placements.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-20 space-y-4">
+        <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+        <p className="text-gray-500 font-bold">Loading placement gallery...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -89,27 +115,27 @@ export const PlacementList = () => {
               <div key={i} className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
                 <div className="flex items-center justify-between mb-6">
                   <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 font-black text-xl border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                    {p.student[0]}
+                    {(p.students?.student_name || "?")[0]}
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{p.company}</p>
-                    <p className="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg mt-1 inline-block">{p.salary}</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{p.company_name}</p>
+                    <p className="text-sm font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg mt-1 inline-block">{p.salary_package}</p>
                   </div>
                 </div>
                 
-                <h3 className="text-xl font-black text-gray-900 tracking-tight">{p.student}</h3>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight">{p.students?.student_name || "Unknown Student"}</h3>
                 <p className="text-gray-500 font-bold text-sm mt-1 flex items-center gap-1.5 uppercase tracking-wide">
-                   <Briefcase size={14} className="text-blue-500" /> {p.role}
+                   <Briefcase size={14} className="text-blue-500" /> {p.job_role}
                 </p>
 
                 <div className="mt-6 pt-6 border-t border-gray-50 grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-2 text-gray-400">
                     <MapPin size={14} />
-                    <span className="text-xs font-bold">{p.location}</span>
+                    <span className="text-xs font-bold">{p.placement_location}</span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-400 justify-end">
                     <Calendar size={14} />
-                    <span className="text-xs font-bold">{p.date.split('-')[0]}</span>
+                    <span className="text-xs font-bold">{p.placement_date ? p.placement_date.split('-')[0] : 'N/A'}</span>
                   </div>
                 </div>
               </div>
@@ -117,9 +143,12 @@ export const PlacementList = () => {
           </div>
           
           <div className="flex justify-center">
-            <Button onClick={() => navigate("/placements/new")} className="flex items-center gap-2 px-8 py-4 rounded-3xl text-lg shadow-xl shadow-blue-200">
-              <Plus size={24} /> New Record
-            </Button>
+            <button 
+              onClick={() => navigate("/placements/new")} 
+              className="flex items-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-3xl text-lg font-bold shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all"
+            >
+               New Record
+            </button>
           </div>
         </div>
       ) : (
@@ -140,3 +169,4 @@ export const PlacementList = () => {
     </div>
   );
 };
+
