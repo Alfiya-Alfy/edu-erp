@@ -11,9 +11,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Connect DB then start scheduler
+// Connect DB then start scheduler (only in non-serverless environments)
 connectDB().then(() => {
-  startScheduler();
+  // node-cron doesn't work on Vercel serverless — skip scheduler there
+  if (!process.env.VERCEL) {
+    startScheduler();
+  }
 }).catch(() => {
   // DB error handled inside connectDB
 });
