@@ -1,17 +1,13 @@
-// const pool = require('../db');
-
-// Mock data based on database_setup.sql
-const mockRoles = [
-  { id: 1, name: 'Super Admin', description: 'Full system access', created_at: new Date().toISOString() },
-  { id: 2, name: 'Institution Admin', description: 'Can manage a specific institution', created_at: new Date().toISOString() },
-  { id: 3, name: 'Teacher', description: 'Can manage students and attendance', created_at: new Date().toISOString() },
-  { id: 4, name: 'Student', description: 'Read-only access to own records', created_at: new Date().toISOString() }
-];
+const { sequelize } = require('../config/database');
+const { QueryTypes } = require('sequelize');
 
 const getRoles = async (req, res) => {
   try {
-    // const rolesRes = await pool.query('SELECT * FROM roles ORDER BY id');
-    res.json({ success: true, data: mockRoles });
+    const data = await sequelize.query(
+      'SELECT * FROM roles ORDER BY role_id',
+      { type: QueryTypes.SELECT }
+    );
+    res.json({ success: true, data });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -19,14 +15,16 @@ const getRoles = async (req, res) => {
 
 const createRole = async (req, res) => {
   try {
-    const { name, description } = req.body;
-    const newRole = {
-      id: mockRoles.length + 1,
-      name,
-      description,
-      created_at: new Date().toISOString()
-    };
-    res.status(201).json({ success: true, data: newRole });
+    const { name, role_name, description } = req.body;
+    const resolvedRoleName = role_name || name;
+    const [result] = await sequelize.query(
+      `INSERT INTO roles (role_name, description) VALUES (:role_name, :description) RETURNING *`,
+      {
+        replacements: { role_name: resolvedRoleName, description },
+        type: QueryTypes.INSERT
+      }
+    );
+    res.status(201).json({ success: true, data: result[0] });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

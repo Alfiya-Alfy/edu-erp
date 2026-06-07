@@ -1,18 +1,15 @@
-// const pool = require('../db');
-
-// Mock data based on database_setup.sql
-const mockMergeLogs = [
-  { id: 1, action: 'System Initialization', status: 'Success', details: 'Created initial tables and admin account.', created_at: new Date(Date.now() - 86400000).toISOString() },
-  { id: 2, action: 'Add Branch Kochi', status: 'Success', details: 'Data imported successfully.', created_at: new Date(Date.now() - 43200000).toISOString() },
-  { id: 3, action: 'Add Branch Kozhikode', status: 'Success', details: 'Data imported successfully.', created_at: new Date().toISOString() }
-];
+const { sequelize } = require('../config/database');
+const { QueryTypes } = require('sequelize');
 
 // @desc    Get all merge logs
 // @route   GET /api/merge-log
 const getMergeLogs = async (req, res) => {
   try {
-    // const result = await pool.query('SELECT * FROM institution_merge_log');
-    res.status(200).json({ success: true, count: mockMergeLogs.length, data: mockMergeLogs });
+    const data = await sequelize.query(
+      'SELECT * FROM institution_merge_log ORDER BY merge_date DESC',
+      { type: QueryTypes.SELECT }
+    );
+    res.status(200).json({ success: true, count: data.length, data });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -22,17 +19,16 @@ const getMergeLogs = async (req, res) => {
 // @route   POST /api/merge-log
 const createMergeLog = async (req, res) => {
   try {
-    const { action, status, details } = req.body; 
-    
-    const newLog = {
-      id: mockMergeLogs.length + 1,
-      action,
-      status,
-      details,
-      created_at: new Date().toISOString()
-    };
-    
-    res.status(201).json({ success: true, data: newLog });
+    const { action, status, details } = req.body;
+    const [result] = await sequelize.query(
+      `INSERT INTO institution_merge_log (action, status, details)
+       VALUES (:action, :status, :details) RETURNING *`,
+      {
+        replacements: { action, status, details },
+        type: QueryTypes.INSERT
+      }
+    );
+    res.status(201).json({ success: true, data: result[0] });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }

@@ -1,70 +1,99 @@
-const pool = require('../db');
+const { sequelize } = require('../config/database');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// @desc    Auth user & get token
-// @route   POST /api/auth/login
 const loginUser = async (req, res) => {
   const { email, password, institution_id } = req.body;
 
   try {
-    // Check for admin first
-    let result = await pool.query('SELECT * FROM admin WHERE email = $1', [email]);
-    let user = result.rows[0];
+    let user = null;
     let isSuperAdmin = false;
 
-    if (user) {
-      isSuperAdmin = true;
-    } else {
-      // Check normal users
-      result = await pool.query('SELECT * FROM users WHERE email = $1 AND status = $2', [email, 'Active']);
-      user = result.rows[0];
-    }
+    // 1. Check users table
+    const [userResult] = await sequelize.query(
+      "SELECT * FROM users WHERE email = :email AND LOWER(status) = 'active'",
+      {
+        replacements: { email },
+      }
+    );
 
+    user = userResult[0];
+
+    // 2. If user not found
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
-
-    // Fix: Use password_hash from the schema
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
-
-    // Branch Verification: If not superadmin, ensure user belongs to the selected institution
-    if (!isSuperAdmin && institution_id && user.institution_id !== institution_id) {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'You are not authorized to access this branch.' 
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials',
       });
     }
 
+    // 3. Determine if Super Admin
+    isSuperAdmin = user.role_id === 1;
+
+    // 4. Password check
+    // The database uses plaintext password in 'user_password' or hashed in 'password_hash'
+    const storedPassword = user.password_hash || user.user_password;
+    let isMatch = false;
+    
+    // Check if it's bcrypt hash or plaintext
+    if (storedPassword && storedPassword.startsWith('$2a$')) {
+      isMatch = await bcrypt.compare(password, storedPassword);
+    } else {
+      isMatch = (password === storedPassword);
+    }
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials',
+      });
+    }
+
+    // 5. Institution check
+    if (
+      !isSuperAdmin &&
+      institution_id &&
+      user.institution_id !== institution_id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to access this branch.',
+      });
+    }
+
+    // 6. JWT token
+    const userId = user.id || user.user_id;
     const token = jwt.sign(
-      { 
-        id: user.id, 
-        email: user.email, 
+      {
+        id: userId,
+        email: user.email,
         role_id: user.role_id || null,
         institution_id: user.institution_id || institution_id || null,
-        isSuperAdmin 
+        isSuperAdmin,
       },
-      process.env.JWT_SECRET || 'fallback_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '30d' }
     );
 
+    // 7. Response
     res.json({
       success: true,
       token,
       user: {
-        id: user.id,
-        name: user.name || user.username,
+        id: userId,
+        name: user.name || user.user_name || user.username,
         email: user.email,
-        institution_id: user.institution_id || institution_id,
+        institution_id: user.institution_id,
         role_id: user.role_id,
-        isSuperAdmin
-      }
+        isSuperAdmin,
+      },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Login Error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 

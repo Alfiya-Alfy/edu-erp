@@ -29,20 +29,44 @@ export const AuthProvider = ({ children }) => {
         if (data.success && data.data.length > 0) {
           setInstitutions(data.data);
           if (savedInst) {
-            setCurrentInstitution(JSON.parse(savedInst));
+            const parsed = JSON.parse(savedInst);
+            const exists = data.data.find(i => i.id === parsed.id);
+            if (exists) {
+              setCurrentInstitution(exists);
+            } else {
+              setCurrentInstitution(data.data[0]);
+              localStorage.setItem('currentInstitution', JSON.stringify(data.data[0]));
+            }
           } else {
             setCurrentInstitution(data.data[0]);
+            localStorage.setItem('currentInstitution', JSON.stringify(data.data[0]));
           }
         } else {
           // If API returns empty, use mock
           setInstitutions(mockInstitutions);
-          setCurrentInstitution(mockInstitutions[0]);
+          if (savedInst) {
+            const parsed = JSON.parse(savedInst);
+            const exists = mockInstitutions.find(i => i.id === parsed.id);
+            if (exists) {
+              setCurrentInstitution(exists);
+            } else {
+              setCurrentInstitution(mockInstitutions[0]);
+            }
+          } else {
+            setCurrentInstitution(mockInstitutions[0]);
+          }
         }
       } catch (err) {
         console.warn('API unavailable, using mock institutions fallback');
         setInstitutions(mockInstitutions);
         if (savedInst) {
-          setCurrentInstitution(JSON.parse(savedInst));
+          const parsed = JSON.parse(savedInst);
+          const exists = mockInstitutions.find(i => i.id === parsed.id);
+          if (exists) {
+            setCurrentInstitution(exists);
+          } else {
+            setCurrentInstitution(mockInstitutions[0]);
+          }
         } else {
           setCurrentInstitution(mockInstitutions[0]);
         }

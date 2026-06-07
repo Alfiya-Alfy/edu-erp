@@ -1,24 +1,30 @@
-const { Sequelize } = require('sequelize');
 require('dotenv').config();
+const { Sequelize } = require('sequelize');
 
-// Configure your PostgreSQL connection here
 const sequelize = new Sequelize(
-  process.env.DB_NAME || 'erpdb',
-  process.env.DB_USER || 'postgres',
-  process.env.DB_PASSWORD || 'password',
+  process.env.DB_NAME,       // postgres
+  process.env.DB_USER,       // postgres
+  process.env.DB_PASSWORD,   // your password
   {
-    host: process.env.DB_HOST || 'localhost',
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
     dialect: 'postgres',
-    logging: false, // Set to true to see SQL queries in console
+    logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    },
   }
 );
 
 const connectDB = async () => {
   try {
     await sequelize.authenticate();
-    console.log('PostgreSQL Connection has been established successfully.');
+    console.log('✅ Sequelize connected to Supabase');
   } catch (error) {
-    console.error('Unable to connect to the PostgreSQL database:', error);
+    console.error('❌ Sequelize connection error:', error);
   }
 };
 

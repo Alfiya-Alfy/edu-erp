@@ -59,10 +59,10 @@ const AttendanceForm = ({ close, refresh, editData, type = 'students' }) => {
             // Set defaults if data exists
             setFormData(prev => ({
                 ...prev,
-                institution_id: inst[0]?._id || "",
-                course_id: cour[0]?._id || "",
-                batch_id: bat[0]?._id || "",
-                marked_by: sta[0]?._id || ""
+                institution_id: inst[0]?.id || "",
+                course_id: cour[0]?.course_id || "",
+                batch_id: bat[0]?.batch_id || "",
+                marked_by: sta[0]?.staff_id || ""
             }));
         }
       } catch (err) {
@@ -82,8 +82,8 @@ const AttendanceForm = ({ close, refresh, editData, type = 'students' }) => {
     setLoading(true);
     try {
       if (editData) {
-        if (type === 'students') await attendanceApi.updateStudentAttendance(editData._id, formData);
-        else await attendanceApi.updateTeacherAttendance(editData._id, formData);
+        if (type === 'students') await attendanceApi.updateStudentAttendance(editData.attendance_id || editData.id, formData);
+        else await attendanceApi.updateTeacherAttendance(editData.attendance_id || editData.id, formData);
       } else {
         if (type === 'students') await attendanceApi.markStudentAttendance(formData);
         else await attendanceApi.markTeacherAttendance(formData);
@@ -117,7 +117,7 @@ const AttendanceForm = ({ close, refresh, editData, type = 'students' }) => {
                 onChange={(e) => setFormData({ ...formData, institution_id: e.target.value })}
             >
                 <option value="">Select Institution</option>
-                {metadata.institutions.map(i => <option key={i._id} value={i._id}>{i.institution_name}</option>)}
+                {metadata.institutions.map(i => <option key={i.id} value={i.id}>{i.institution_name}</option>)}
             </select>
           </div>
 
@@ -129,7 +129,7 @@ const AttendanceForm = ({ close, refresh, editData, type = 'students' }) => {
                 onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
             >
                 <option value="">Select Course</option>
-                {metadata.courses.map(c => <option key={c._id} value={c._id}>{c.course_name}</option>)}
+                {metadata.courses.map(c => <option key={c.course_id} value={c.course_id}>{c.course_name}</option>)}
             </select>
           </div>
 
@@ -141,7 +141,7 @@ const AttendanceForm = ({ close, refresh, editData, type = 'students' }) => {
                 onChange={(e) => setFormData({ ...formData, batch_id: e.target.value })}
             >
                 <option value="">Select Batch</option>
-                {filteredBatches.map(b => <option key={b._id} value={b._id}>{b.batch_name}</option>)}
+                {filteredBatches.map(b => <option key={b.batch_id} value={b.batch_id}>{b.batch_name}</option>)}
             </select>
           </div>
 
@@ -151,12 +151,12 @@ const AttendanceForm = ({ close, refresh, editData, type = 'students' }) => {
                 required
                 value={formData.student_id}
                 onChange={(e) => {
-                    const student = metadata.students.find(s => s._id === e.target.value);
+                    const student = metadata.students.find(s => s.student_id === e.target.value);
                     setFormData({ ...formData, student_id: e.target.value, student_name: student ? student.student_name : "" });
                 }}
             >
                 <option value="">Select Student</option>
-                {filteredStudents.map(s => <option key={s._id} value={s._id}>{s.student_name}</option>)}
+                {filteredStudents.map(s => <option key={s.student_id} value={s.student_id}>{s.student_name}</option>)}
             </select>
           </div>
 
@@ -168,7 +168,7 @@ const AttendanceForm = ({ close, refresh, editData, type = 'students' }) => {
                 onChange={(e) => setFormData({ ...formData, marked_by: e.target.value })}
             >
                 <option value="">Select Staff Member</option>
-                {metadata.staff.map(s => <option key={s._id} value={s._id}>{s.staff_name}</option>)}
+                {metadata.staff.map(s => <option key={s.staff_id} value={s.staff_id}>{s.staff_name}</option>)}
             </select>
           </div>
 

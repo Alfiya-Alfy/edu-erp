@@ -1,270 +1,351 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { 
+  UserCheck, 
+  Users, 
+  Calendar, 
+  Search, 
+  RefreshCw, 
+  Filter,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  MoreVertical,
+  ChevronDown
+} from "lucide-react";
 import attendanceApi from "../../api/attendanceApi";
-import AttendanceForm from "./AttendanceForm";
+import { Table } from "../../components/common/Table";
+import Button from "../../components/common/Button";
+import { useToast } from "../../context/ToastContext";
+import { useAuth } from "../../context/AuthContext";
 
 const AttendancePage = () => {
-    const [type, setType] = useState('students'); // 'students' or 'teachers'
+    const { addToast } = useToast();
+    const { currentInstitution } = useAuth();
+    
+    // UI State
+    const [type, setType] = useState('students'); // 'students' or 'staff'
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState("");
+    
+    // Data State
+    const [logs, setLogs] = useState([]);
+    const [metadata, setMetadata] = useState({
+        students: [],
+        batches: [],
+        courses: [],
+        staff: []
+    });
 
-
-    const [logs, setLogs] = useState([]); // Attendance logs from server
+    // Filters
     const [filters, setFilters] = useState({
-        institution_id: "1",
         course_id: "",
         batch_id: "",
         date: new Date().toISOString().split("T")[0]
     });
 
-    const [open, setOpen] = useState(false);
-    const [editData, setEditData] = useState(null);
-    const [metadata, setMetadata] = useState({
-        students: [],
-        batches: [],
-        institutions: [],
-        courses: [],
-        staff: []
-    });
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
+        setLoading(true);
         try {
-            const [attRes, stuRes, batRes, instRes, courRes, staRes] = await Promise.all([
-                type === 'students' ? attendanceApi.getStudents(filters.batch_id, filters.date) : attendanceApi.getTeachers(filters.date),
+            const [attRes, stuRes, batRes, courRes, staRes] = await Promise.all([
+                type === 'students' 
+                    ? attendanceApi.getStudents(filters.batch_id, filters.date)
+                    : attendanceApi.getTeachers(filters.date),
                 attendanceApi.getStudentsList(),
                 attendanceApi.getBatches(),
-                attendanceApi.getInstitutions(),
                 attendanceApi.getCourses(),
                 attendanceApi.getStaffList()
             ]);
-            setLogs(attRes.data);
+
+            setLogs(attRes.data || []);
             setMetadata({ 
-                students: stuRes.data, 
-                batches: batRes.data, 
-                institutions: instRes.data, 
-                courses: courRes.data, 
-                staff: staRes.data 
+                students: stuRes.data || [], 
+                batches: batRes.data || [], 
+                courses: courRes.data || [], 
+                staff: staRes.data || [] 
             });
         } catch (error) {
-            console.error("Failed to fetch data:", error);
+            console.error("Failed to fetch attendance data:", error);
+            addToast("Failed to load records", "error");
+        } finally {
+            setLoading(false);
         }
-    };
+    }, [type, filters.batch_id, filters.date, addToast]);
 
     useEffect(() => {
         fetchData();
-    }, [type, filters.batch_id, filters.date]);
+    }, [fetchData]);
 
-    const markStatus = async (item, status) => {
+    const handleMarkStatus = async (item, status) => {
         const idField = type === 'students' ? 'student_id' : 'staff_id';
-        const existingLog = logs.find(l =>
-            l[idField] === item._id &&
-            l.attendance_date === filters.date &&
-            (type === 'teachers' || l.batch_id === filters.batch_id)
-        );
+        const itemId = item[idField];
+        
+        const existingLog = logs.find(l => l[idField] === itemId);
 
-        const data = {
-            [idField]: item._id,
-            [type === 'students' ? 'student_name' : 'staff_name']: type === 'students' ? item.student_name : item.staff_name,
-            institution_id: filters.institution_id || item.institution_id,
+        const payload = {
+            [idField]: itemId,
+            institution_id: currentInstitution?.id || 1,
             attendance_date: filters.date,
             status: status,
-            marked_by: "1",
-            remarks: existingLog ? existingLog.remarks : "Quick Mark"
+            marked_by: 1, // Placeholder for logged in user ID
+            remarks: "Quick Mark"
         };
 
         if (type === 'students') {
-            data.course_id = filters.course_id || item.course_id;
-            data.batch_id = filters.batch_id || item.batch_id;
+            payload.course_id = item.course_id;
+            payload.batch_id = item.batch_id;
         }
 
         try {
-            if (existingLog) {
-                if (type === 'students') await attendanceApi.updateStudentAttendance(existingLog._id, data);
-                else await attendanceApi.updateTeacherAttendance(existingLog._id, data);
-            } else {
-                if (type === 'students') await attendanceApi.markStudentAttendance(data);
-                else await attendanceApi.markTeacherAttendance(data);
-            }
+            // Since we don't have Update implemented in the new controller yet, 
+            // we'll just treat everything as a new mark for now, or just implement POST.
+            // For simplicity in this session, we only use the POST mark endpoint.
+            if (type === 'students') await attendanceApi.markStudentAttendance(payload);
+            else await attendanceApi.markTeacherAttendance(payload);
+            
+            addToast(`Marked ${item.student_name || item.staff_name} as ${status}`, "success");
             fetchData();
         } catch (err) {
-            console.error("Failed to mark status:", err);
+            addToast("Failed to mark attendance", "error");
         }
     };
 
-    const handleBatchMark = async (status = "Present") => {
-        if (type === 'students' && !filters.batch_id) return alert("Select a batch first.");
-
-        const listToMark = type === 'students'
-            ? metadata.students.filter(s => s.batch_id === filters.batch_id)
-            : metadata.staff.filter(s => !filters.institution_id || s.institution_id === filters.institution_id);
-
-        if (window.confirm(`Mark all ${listToMark.length} ${type} as ${status}?`)) {
-            const promises = listToMark.map(item => markStatus(item, status));
-            await Promise.all(promises);
-        }
-    };
-
-    // Calculate display list
-    const displayList = (type === 'students' ? metadata.students : metadata.staff)
-        .filter(item => {
-            if (type === 'students') {
-                return (!filters.batch_id || item.batch_id === filters.batch_id) &&
-                    (!filters.institution_id || item.institution_id === filters.institution_id);
-            } else {
-                return (!filters.institution_id || item.institution_id === filters.institution_id);
-            }
-        })
-        .map(item => {
-            const idField = type === 'students' ? 'student_id' : 'staff_id';
-            const log = logs.find(l =>
-                l[idField] === item._id &&
-                l.attendance_date === filters.date &&
-                (type === 'teachers' || l.batch_id === item.batch_id)
-            );
-            return { ...item, log };
-        });
-
-    return (
-        <div className="dashboard-layout">
-            <div className="main-content">
-                <header className="page-header">
-                    <div className="header-text">
-                        <div className="tab-switcher" style={{ marginBottom: '0.8rem' }}>
-                            <button className={type === 'students' ? 'active' : ''} onClick={() => setType('students')}>Students</button>
-                            <button className={type === 'teachers' ? 'active' : ''} onClick={() => setType('teachers')}>Staff Members</button>
-                        </div>
-                        <h1>{type === 'students' ? 'Student Attendance' : 'Staff Attendance'}</h1>
-                        <p>Mark attendance for {filters.date}</p>
+    const columns = [
+        { 
+            header: type === 'students' ? "Student" : "Staff Member", 
+            accessor: type === 'students' ? "student_name" : "staff_name",
+            render: (row) => (
+                <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${
+                        type === 'students' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'
+                    }`}>
+                        {(row.student_name || row.staff_name || "U")[0]}
                     </div>
-                    <div className="header-actions">
-                        <button className="bulk-btn" onClick={() => handleBatchMark("Present")} style={{ background: 'var(--success)', color: 'white', border: 'none' }}>All Present</button>
-                        <button className="bulk-btn" onClick={() => handleBatchMark("Absent")} style={{ background: 'var(--danger)', color: 'white', border: 'none' }}>All Absent</button>
-                    </div>
-                </header>
-
-                <div className="filter-bar">
-                    <div className="filter-group">
-                        <label>Campus</label>
-                        <select value={filters.institution_id} onChange={(e) => setFilters({ ...filters, institution_id: e.target.value, batch_id: "" })}>
-                            <option value="">All Locations</option>
-                            {metadata.institutions.map(i => <option key={i._id} value={i._id}>{i.place}</option>)}
-                        </select>
-                    </div>
-                    {type === 'students' && (
-                        <>
-                            <div className="filter-group">
-                                <label>Course</label>
-                                <select value={filters.course_id} onChange={(e) => setFilters({ ...filters, course_id: e.target.value, batch_id: "" })}>
-                                    <option value="">All Courses</option>
-                                    {metadata.courses.map(c => <option key={c._id} value={c._id}>{c.course_name}</option>)}
-                                </select>
-                            </div>
-                            <div className="filter-group">
-                                <label>Batch</label>
-                                <select value={filters.batch_id} onChange={(e) => setFilters({ ...filters, batch_id: e.target.value })}>
-                                    <option value="">Select Batch</option>
-                                    {metadata.batches.filter(b => (!filters.institution_id || b.institution_id === filters.institution_id) && (!filters.course_id || b.course_id === filters.course_id)).map(b => <option key={b._id} value={b._id}>{b.batch_name}</option>)}
-                                </select>
-                            </div>
-                        </>
-                    )}
-                    <div className="filter-group">
-                        <label>Date</label>
-                        <input type="date" value={filters.date} onChange={(e) => setFilters({ ...filters, date: e.target.value })} />
+                    <div>
+                        <p className="text-sm font-bold text-slate-800">{row.student_name || row.staff_name}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                            {type === 'students' ? `Batch: ${row.batch_name || "N/A"}` : row.designation}
+                        </p>
                     </div>
                 </div>
+            )
+        },
+        { 
+            header: "Quick Mark", 
+            accessor: "status",
+            render: (row) => {
+                const idField = type === 'students' ? 'student_id' : 'staff_id';
+                const log = logs.find(l => l[idField] === row[idField]);
+                const status = log?.status;
 
-                <div className="attendance-container">
-                    <div className="table-wrapper">
-                        <table className="attendance-table">
-                            <thead>
-                                <tr>
-                                    <th>{type === 'students' ? 'Student Name' : 'Staff Name'}</th>
-                                    <th>{type === 'students' ? 'Batch' : 'Department/Role'}</th>
-                                    <th style={{ textAlign: 'center' }}>Quick Mark</th>
-                                    <th style={{ textAlign: 'center' }}>Current Status</th>
-                                    <th className="actions-cell">Log</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {displayList.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="5" className="empty-state">No {type} found for this selection.</td>
-                                    </tr>
-                                ) : (
-                                    displayList.map((item) => (
-                                        <tr key={item._id}>
-                                            <td className="student-cell">
-                                                <div className="avatar">{(type === 'students' ? item.student_name : item.staff_name || "U").charAt(0)}</div>
-                                                <div className="info">
-                                                    <strong>{type === 'students' ? item.student_name : item.staff_name}</strong>
-                                                    <span style={{ fontSize: '0.75rem', display: 'block', color: 'var(--text-muted)' }}>
-                                                        {type === 'students' ? `ID: ${item.student_id}` : item.email}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                {type === 'students'
-                                                    ? (metadata.batches.find(b => b._id === item.batch_id)?.batch_name || "-")
-                                                    : (item.role || item.department || "Staff")
-                                                }
-                                            </td>
-                                            <td style={{ textAlign: 'center' }}>
-                                                <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
-                                                    <button className={`action-dot ${item.log?.status === 'Present' ? 'active-p' : ''}`} onClick={() => markStatus(item, 'Present')}>P</button>
-                                                    <button className={`action-dot ${item.log?.status === 'Absent' ? 'active-a' : ''}`} onClick={() => markStatus(item, 'Absent')}>A</button>
-                                                </div>
-                                            </td>
-                                            <td style={{ textAlign: 'center' }}>
-                                                {item.log ? (
-                                                    <span className={`status-badge ${item.log.status.toLowerCase()}`}>{item.log.status}</span>
-                                                ) : (
-                                                    <span className="status-badge" style={{ background: '#f1f5f9', color: '#94a3b8' }}>Not Marked</span>
-                                                )}
-                                            </td>
-                                            <td className="actions-cell">
-                                                <button className="edit-btn" onClick={() => { setEditData(item.log || { ...item, attendance_date: filters.date }); setOpen(true); }}>✎</button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                return (
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={() => handleMarkStatus(row, 'Present')}
+                            className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                status === 'Present' 
+                                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' 
+                                : 'bg-slate-50 text-slate-400 hover:bg-emerald-50 hover:text-emerald-500'
+                            }`}
+                        >
+                            Present
+                        </button>
+                        <button 
+                            onClick={() => handleMarkStatus(row, 'Absent')}
+                            className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                status === 'Absent' 
+                                ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' 
+                                : 'bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500'
+                            }`}
+                        >
+                            Absent
+                        </button>
                     </div>
+                );
+            }
+        },
+        { 
+            header: "Status", 
+            accessor: "status",
+            render: (row) => {
+                const idField = type === 'students' ? 'student_id' : 'staff_id';
+                const log = logs.find(l => l[idField] === row[idField]);
+                
+                if (!log) return <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Not Marked</span>;
+
+                return (
+                    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest w-fit ${
+                        log.status === 'Present' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                    }`}>
+                        {log.status === 'Present' ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
+                        {log.status}
+                    </div>
+                );
+            }
+        },
+        { 
+            header: "Marked By", 
+            accessor: "marked_by",
+            render: (row) => {
+                const idField = type === 'students' ? 'student_id' : 'staff_id';
+                const log = logs.find(l => l[idField] === row[idField]);
+                return <span className="text-xs font-bold text-slate-400">{log ? 'Admin' : '-'}</span>;
+            }
+        }
+    ];
+
+    const displayList = (type === 'students' ? metadata.students : metadata.staff).filter(item => {
+        const matchesName = (item.student_name || item.staff_name || "").toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesBatch = type === 'students' && filters.batch_id ? item.batch_id === parseInt(filters.batch_id) : true;
+        return matchesName && matchesBatch;
+    });
+
+    return (
+        <div className="space-y-8 animate-in fade-in duration-700">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <div className={`p-4 rounded-[24px] ${type === 'students' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                        {type === 'students' ? <Users size={32} /> : <UserCheck size={32} />}
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black text-slate-800 tracking-tight leading-none mb-1">
+                            {type === 'students' ? 'Student Attendance' : 'Staff Attendance'}
+                        </h1>
+                        <p className="text-slate-500 font-medium">Daily tracking and logging for <span className="text-primary font-bold">{currentInstitution?.name || 'Main Campus'}</span>.</p>
+                    </div>
+                </div>
+                <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+                    <button 
+                        onClick={() => setType('students')}
+                        className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${type === 'students' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                        Students
+                    </button>
+                    <button 
+                        onClick={() => setType('staff')}
+                        className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${type === 'staff' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                        Staff
+                    </button>
                 </div>
             </div>
 
-            <aside className="sidebar-right">
-                <div className="stats-card" style={{ borderLeft: '4px solid var(--primary)' }}>
-                    <h3>{type.charAt(0).toUpperCase() + type.slice(1)} Summary</h3>
-                    <div className="stat-item">
-                        <label>Total {type}</label>
-                        <div className="value">{displayList.length}</div>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="lg:col-span-3 bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-slate-50 flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="relative w-64">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                                <input 
+                                    type="text" 
+                                    placeholder={`Search ${type}...`} 
+                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-primary/20 transition-all"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            {type === 'students' && (
+                                <select 
+                                    className="px-4 py-2.5 bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-primary/20"
+                                    value={filters.batch_id}
+                                    onChange={(e) => setFilters({...filters, batch_id: e.target.value})}
+                                >
+                                    <option value="">Select Batch</option>
+                                    {metadata.batches.map(b => <option key={b.batch_id} value={b.batch_id}>{b.batch_name}</option>)}
+                                </select>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+                                <Calendar size={14} className="text-primary" />
+                                <input 
+                                    type="date" 
+                                    className="bg-transparent border-none text-xs font-black text-slate-700 outline-none uppercase"
+                                    value={filters.date}
+                                    onChange={(e) => setFilters({...filters, date: e.target.value})}
+                                />
+                            </div>
+                            <Button variant="secondary" size="sm" onClick={fetchData} icon={RefreshCw} className={loading ? 'animate-spin' : ''} />
+                        </div>
                     </div>
-                    <div className="stat-item">
-                        <label>Present Now</label>
-                        <div className="value success">{displayList.filter(s => s.log?.status === 'Present').length}</div>
+
+                    <Table
+                        columns={columns}
+                        data={displayList}
+                        loading={loading}
+                        actions={false}
+                        pagination={true}
+                        totalPages={1}
+                    />
+                </div>
+
+                <div className="space-y-6">
+                    <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <Activity size={80} />
+                        </div>
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Summary Metrics</h3>
+                        <div className="space-y-6">
+                            <div>
+                                <p className="text-3xl font-black text-slate-800 tracking-tight">{displayList.length}</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Enrolled</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 bg-emerald-50 rounded-3xl border border-emerald-100/50">
+                                    <p className="text-xl font-black text-emerald-600">{logs.filter(l => l.status === 'Present').length}</p>
+                                    <p className="text-[9px] font-black text-emerald-500/70 uppercase tracking-widest">Present</p>
+                                </div>
+                                <div className="p-4 bg-rose-50 rounded-3xl border border-rose-100/50">
+                                    <p className="text-xl font-black text-rose-600">{logs.filter(l => l.status === 'Absent').length}</p>
+                                    <p className="text-[9px] font-black text-rose-500/70 uppercase tracking-widest">Absent</p>
+                                </div>
+                            </div>
+                            <div className="pt-4 border-t border-slate-50">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Attendance Rate</span>
+                                    <span className="text-xs font-black text-primary">
+                                        {displayList.length > 0 ? Math.round((logs.filter(l => l.status === 'Present').length / displayList.length) * 100) : 0}%
+                                    </span>
+                                </div>
+                                <div className="h-2 bg-slate-50 rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full bg-primary rounded-full transition-all duration-1000" 
+                                        style={{ width: `${displayList.length > 0 ? (logs.filter(l => l.status === 'Present').length / displayList.length) * 100 : 0}%` }} 
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="stat-item">
-                        <label>Absent</label>
-                        <div className="value danger">{displayList.filter(s => s.log?.status === 'Absent').length}</div>
+
+                    <div className="bg-primary p-8 rounded-[40px] text-white shadow-xl shadow-primary/20 relative overflow-hidden group">
+                        <div className="absolute -right-4 -bottom-4 opacity-20 group-hover:scale-110 transition-transform duration-700">
+                            <Clock size={120} />
+                        </div>
+                        <h3 className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-2">Quick Tip</h3>
+                        <p className="text-sm font-bold leading-relaxed mb-6">
+                            Marking attendance daily helps in generating accurate performance and behavioral reports for students.
+                        </p>
+                        <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white hover:text-primary transition-all">View History</Button>
                     </div>
                 </div>
-            </aside>
-
-            {open && (
-                <AttendanceForm
-                    close={() => setOpen(false)}
-                    refresh={fetchData}
-                    editData={editData}
-                    type={type}
-                />
-            )}
+            </div>
         </div>
     );
 };
 
+const Activity = ({ size, className }) => (
+    <svg 
+        width={size} 
+        height={size} 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2.5" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        className={className}
+    >
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+    </svg>
+);
+
 export default AttendancePage;
-
-
-
-
-
-

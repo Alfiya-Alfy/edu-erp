@@ -2,11 +2,16 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Layers, Clock, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
-import { Input } from "../../components/ui/Input";
-import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/common/Input";
+import { Button } from "../../components/common/Button";
+
+import { useAuth } from "../../context/AuthContext";
+import apiClient from "../../api/apiClient";
 
 export const CourseForm = () => {
   const navigate = useNavigate();
+  const { currentInstitution } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     courseName: "", courseCode: "", department: "",
     duration: "", durationUnit: "Years",
@@ -17,10 +22,41 @@ export const CourseForm = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    toast.success("Course successfully created in the system.");
-    navigate("/courses");
+    setLoading(true);
+
+    let durationInMonths = parseInt(formData.duration, 10) || 0;
+    if (formData.durationUnit === "Years") {
+      durationInMonths *= 12;
+    } else if (formData.durationUnit === "Semesters") {
+      durationInMonths *= 6;
+    }
+
+    try {
+      const payload = {
+        institution_id: currentInstitution?.id || 1,
+        course_name: formData.courseName,
+        course_code: formData.courseCode,
+        duration_in_months: durationInMonths,
+        total_fees: parseFloat(formData.fees) || 0,
+        description: formData.description,
+        status: "active"
+      };
+
+      const res = await apiClient.post("/courses", payload);
+      if (res.success) {
+        toast.success("Course successfully created in the system.");
+        navigate("/courses");
+      } else {
+        toast.error(res.message || "Failed to create course.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || "An error occurred while creating the course.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -116,8 +152,8 @@ export const CourseForm = () => {
           <Button variant="secondary" type="button" onClick={() => navigate("/courses")}>
             Cancel
           </Button>
-          <Button type="submit" className="px-10 py-4 shadow-xl shadow-blue-200/50 text-base font-bold bg-blue-600 hover:bg-blue-700">
-            Create Course
+          <Button type="submit" disabled={loading} className="px-10 py-4 shadow-xl shadow-blue-200/50 text-base font-bold bg-blue-600 hover:bg-blue-700">
+            {loading ? "Creating..." : "Create Course"}
           </Button>
         </div>
       </form>

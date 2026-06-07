@@ -1,13 +1,20 @@
-import axios from "./axios";
+import apiClient from "./apiClient";
 
-export const getStudents = () =>
-  axios.get("/students?institution_id=1");
+export const studentApi = {
+  getStudents: (institutionId = 1) => 
+    apiClient.get("/students", { params: { institution_id: institutionId } }),
 
-export const createStudent = (data) =>
-  axios.post("/students", data);
+  getStudentById: (id) => 
+    apiClient.get(`/students/${id}`),
 
-export const updateStudent = (id, data) =>
-  axios.put(`/students/${id}`, data);
+  createStudent: (data) => 
+    apiClient.post("/students", data),
 
-export const deleteStudent = (id) =>
-  axios.delete(`/students/${id}`);
+  updateStudent: (id, data) => 
+    apiClient.put(`/students/${id}`, data),
+
+  deleteStudent: (id) => 
+    apiClient.delete(`/students/${id}`),
+};
+
+export default studentApi;
