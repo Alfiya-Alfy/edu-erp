@@ -1,1 +1,2 @@
-export const Users = () => <div className='p-8'>Users Placeholder</div>;
+// Redirect to system-management Users
+export { default } from '../system-management/Users';

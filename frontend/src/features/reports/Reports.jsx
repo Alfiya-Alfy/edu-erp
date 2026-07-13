@@ -1,1 +1,2 @@
-export const Reports = () => <div className='p-8'>Reports Placeholder</div>;
+// Redirect to the real Reports (system-management)
+export { default } from '../system-management/Reports';

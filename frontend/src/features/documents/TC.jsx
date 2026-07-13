@@ -1,1 +1,2 @@
-export const TC = () => <div className='p-8'>Transfer Certificate (TC) Placeholder</div>;
+// Redirect to the real Transfer Certificate feature
+export { default } from '../finance/TransferCertificate';

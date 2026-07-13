@@ -1,1 +1,2 @@
-export const MergeLog = () => <div className='p-8'>Institution Merge Log Placeholder</div>;
+// Redirect to the real InstitutionMergeLog (system-management)
+export { default } from '../system-management/InstitutionMergeLog';

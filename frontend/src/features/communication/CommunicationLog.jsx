@@ -1,1 +1,6 @@
-export const CommunicationLog = () => <div className='p-8'>Communication Log Placeholder</div>;
+// Redirect to the main CommunicationLogsPage
+export { default } from './CommunicationLogsPage';
+export const CommunicationLog = () => {
+  const CommunicationLogsPage = require('./CommunicationLogsPage').default;
+  return <CommunicationLogsPage />;
+};

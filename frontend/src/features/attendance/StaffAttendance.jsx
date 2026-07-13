@@ -1,1 +1,6 @@
-export const StaffAttendance = () => <div className='p-8'>Staff Attendance Placeholder</div>;
+// Redirect to the main AttendancePage
+export { default } from './AttendancePage';
+export const StaffAttendance = () => {
+  const AttendancePage = require('./AttendancePage').default;
+  return <AttendancePage defaultType="staff" />;
+};

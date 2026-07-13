@@ -1,1 +1,2 @@
-export const Certificates = () => <div className='p-8'>Certificates Placeholder</div>;
+// Redirect to the real Certificates feature
+export { default } from '../finance/Certificates';
