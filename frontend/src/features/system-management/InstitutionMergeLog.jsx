@@ -19,9 +19,9 @@ const InstitutionMergeLog = () => {
 
   // Form State for Execution
   const [mergeForm, setMergeForm] = useState({
-    source_id: '',
-    target_id: '',
-    remarks: ''
+    action: 'Institution Merge',
+    status: 'Success',
+    details: ''
   });
 
   // 1. Fetch Logs (Step 3)
@@ -46,16 +46,16 @@ const InstitutionMergeLog = () => {
   // 2. Handle Execute Merge Action (Step 6)
   const handleExecuteMerge = async (e) => {
     e.preventDefault();
-    if (!mergeForm.source_id || !mergeForm.target_id) {
-      return addToast('Both source and target IDs are required.', 'warning');
+    if (!mergeForm.action || !mergeForm.details) {
+      return addToast('Action and details are required.', 'warning');
     }
 
     try {
       setLoading(true);
       await mergeLogApi.create(mergeForm);
-      addToast('Institution merge operation initiated.', 'success');
+      addToast('Audit log entry created successfully.', 'success');
       setIsModalOpen(false);
-      setMergeForm({ source_id: '', target_id: '', remarks: '' });
+      setMergeForm({ action: 'Institution Merge', status: 'Success', details: '' });
       fetchLogs();
     } catch (err) {
       addToast(err.message, 'error');
@@ -165,45 +165,48 @@ const InstitutionMergeLog = () => {
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        title="Execute Database Merge"
+        title="Add Merge Audit Log Entry"
         footer={(
           <>
             <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleExecuteMerge} loading={loading}>Initiate Sync</Button>
+            <Button onClick={handleExecuteMerge} loading={loading}>Add Entry</Button>
           </>
         )}
       >
         <div className="space-y-6">
-          <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex gap-4">
-             <AlertCircle className="text-amber-500 mt-0.5" size={20} />
-             <p className="text-xs font-bold text-amber-700 leading-relaxed italic">
-                Warning: Merging institutions will consolidate all child records into the target branch and remove the source institution permanently.
-             </p>
-          </div>
           <div className="grid grid-cols-2 gap-4">
-             <Input 
-                label="Source Institution ID" 
-                placeholder="ID to be merged" 
-                value={mergeForm.source_id}
-                onChange={(e) => setMergeForm({...mergeForm, source_id: e.target.value})}
-                required
-             />
-             <div className="flex items-center justify-center pt-6">
-                <ArrowRight size={24} className="text-slate-300" />
+             <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Action Title</label>
+                <select 
+                   value={mergeForm.action}
+                   onChange={(e) => setMergeForm({...mergeForm, action: e.target.value})}
+                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-primary rounded-xl text-sm font-semibold text-slate-700 outline-none h-11"
+                   required
+                >
+                   <option value="Institution Merge">Institution Merge</option>
+                   <option value="Branch Sync">Branch Sync</option>
+                   <option value="Database Archive">Database Archive</option>
+                   <option value="Backup Consolidation">Backup Consolidation</option>
+                </select>
              </div>
-             <Input 
-                label="Target Institution ID" 
-                placeholder="New primary branch ID" 
-                value={mergeForm.target_id}
-                onChange={(e) => setMergeForm({...mergeForm, target_id: e.target.value})}
-                required
-             />
+             <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Status</label>
+                <select 
+                   value={mergeForm.status}
+                   onChange={(e) => setMergeForm({...mergeForm, status: e.target.value})}
+                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-primary rounded-xl text-sm font-semibold text-slate-700 outline-none h-11"
+                   required
+                >
+                   <option value="Success">Success</option>
+                   <option value="Failed">Failed</option>
+                </select>
+             </div>
           </div>
           <Input 
-             label="Execution Remarks" 
-             placeholder="Mandatory audit trail reason..." 
-             value={mergeForm.remarks}
-             onChange={(e) => setMergeForm({...mergeForm, remarks: e.target.value})}
+             label="Execution Details" 
+             placeholder="Mandatory audit trail details..." 
+             value={mergeForm.details}
+             onChange={(e) => setMergeForm({...mergeForm, details: e.target.value})}
              required
           />
         </div>

@@ -1,2 +1,4 @@
-// Redirect to the real InstitutionMergeLog (system-management)
-export { default } from '../system-management/InstitutionMergeLog';
+import InstitutionMergeLog from '../system-management/InstitutionMergeLog';
+
+export const MergeLog = InstitutionMergeLog;
+export default InstitutionMergeLog;

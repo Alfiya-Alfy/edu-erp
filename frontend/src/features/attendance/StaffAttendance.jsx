@@ -1,6 +1,4 @@
-// Redirect to the main AttendancePage
-export { default } from './AttendancePage';
-export const StaffAttendance = () => {
-  const AttendancePage = require('./AttendancePage').default;
-  return <AttendancePage defaultType="staff" />;
-};
+import AttendancePage from './AttendancePage';
+
+export const StaffAttendance = AttendancePage;
+export default AttendancePage;

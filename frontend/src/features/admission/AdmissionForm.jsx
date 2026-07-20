@@ -70,29 +70,28 @@ export const AdmissionForm = () => {
     try {
         // 1. Create Student
         const studentRes = await apiClient.post('/students', {
-            ...formData,
-            institution_id: currentInstitution?.id
-        });
+  ...formData,
+  institution_id: currentInstitution?.id
+});
 
-        if (studentRes.success) {
-            const studentId = studentRes.data.student_id;
-            
-            // 2. Create Admission
+if (studentRes.data.success) {
+            const studentId = studentRes.data.data.student_id;
+
             await admissionApi.create({
-                student_id: studentId,
-                institution_id: currentInstitution?.id,
-                course_id: formData.course_id,
-                batch_id: formData.batch_id,
-                admission_number: formData.admission_number,
-                admission_status: formData.admission_status,
-                admission_date: new Date().toISOString().split('T')[0],
-                documents_submitted: formData.documents_submitted
+              student_id: studentId,
+              institution_id: currentInstitution?.id,
+              course_id: formData.course_id,
+              batch_id: formData.batch_id,
+              admission_number: formData.admission_number,
+              admission_status: formData.admission_status,
+              admission_date: new Date().toISOString().split('T')[0],
+              documents_submitted: formData.documents_submitted
             });
+          }
 
             setIsSubmitted(true);
             toast.success("Admission application submitted successfully!");
-        }
-    } catch (error) {
+        } catch (error) {
         console.error("Admission failed:", error);
         toast.error(error.response?.data?.message || "Failed to process admission");
     } finally {

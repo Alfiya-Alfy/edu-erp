@@ -1,2 +1,4 @@
-// Redirect to system-management Roles
-export { default } from '../system-management/Roles';
+import Roles from '../system-management/Roles';
+
+export const RolesComponent = Roles;
+export default Roles;

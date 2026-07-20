@@ -1,2 +1,4 @@
-// Redirect to system-management Users
-export { default } from '../system-management/Users';
+import Users from '../system-management/Users';
+
+export const UsersComponent = Users;
+export default Users;

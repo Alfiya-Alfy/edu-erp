@@ -1,2 +1,4 @@
-// Redirect to the real Transfer Certificate feature
-export { default } from '../finance/TransferCertificate';
+import TransferCertificate from '../finance/TransferCertificate';
+
+export const TC = TransferCertificate;
+export default TransferCertificate;

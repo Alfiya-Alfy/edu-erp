@@ -1,2 +1,4 @@
-// Redirect to the real Reports (system-management)
-export { default } from '../system-management/Reports';
+import ReportsComponent from '../system-management/Reports';
+
+export const Reports = ReportsComponent;
+export default ReportsComponent;
