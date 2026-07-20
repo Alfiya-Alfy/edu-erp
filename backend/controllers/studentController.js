@@ -48,7 +48,8 @@ const getStudentById = async (req, res) => {
 
 const createStudent = async (req, res) => {
   try {
-    const { student_name, institution_id, batch_id, course_id, email, phone_number, dob, gender, address, admission_number } = req.body;
+    const { student_name, institution_id, batch_id, course_id, email, phone_number, gender, address, admission_number } = req.body;
+    const dob = req.body.dob || req.body.date_of_birth || null;
     const [result] = await sequelize.query(
       `INSERT INTO students (student_name, institution_id, batch_id, course_id, email, phone_number, dob, gender, address, admission_number)
        VALUES (:student_name, :institution_id, :batch_id, :course_id, :email, :phone_number, :dob, :gender, :address, :admission_number) RETURNING *`,
@@ -66,11 +67,15 @@ const createStudent = async (req, res) => {
 const updateStudent = async (req, res) => {
   const { id } = req.params;
   const updates = { ...req.body };
+  if (updates.date_of_birth !== undefined) {
+    updates.dob = updates.date_of_birth;
+    delete updates.date_of_birth;
+  }
 
   // 1. Remove fields that don't exist in the 'students' table or shouldn't be updated manually
   const allowedFields = [
     'institution_id', 'course_id', 'batch_id', 'student_name', 
-    'first_name', 'last_name', 'gender', 'date_of_birth', 
+    'first_name', 'last_name', 'gender', 'dob', 
     'email', 'phone_number', 'address', 'city', 'state', 
     'pincode', 'blood_group', 'graduation_status', 'status'
   ];
