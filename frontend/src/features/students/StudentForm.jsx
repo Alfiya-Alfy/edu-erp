@@ -105,23 +105,25 @@ export const StudentForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    setFormData(prev => {
-      const newData = { ...prev, [name]: value };
-      // Keep student_name in sync with first/last name
-      if (name === 'first_name' || name === 'last_name') {
-        newData.student_name = `${newData.first_name} ${newData.last_name}`.trim();
-      }
-      
-      // Reset course and batch if institution changes
-      if (name === 'institution_id') {
-        newData.course_id = "";
-        newData.batch_id = "";
-      }
-      return newData;
-    });
-  };
 
+    console.log(name, value);
+
+    setFormData(prev => {
+        const newData = { ...prev, [name]: value };
+
+        if (name === "first_name" || name === "last_name") {
+            newData.student_name =
+                `${newData.first_name} ${newData.last_name}`.trim();
+        }
+
+        if (name === "institution_id") {
+            newData.course_id = "";
+            newData.batch_id = "";
+        }
+
+        return newData;
+    });
+};
   const filteredCourses = courses.filter(c => c.institution_id === parseInt(formData.institution_id || 1));
   const filteredBatches = batches.filter(b => b.institution_id === parseInt(formData.institution_id || 1));
 
@@ -181,7 +183,7 @@ export const StudentForm = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Input label="Admission Number" name="admission number" value={formData.admission_number} onChange={handleChange} placeholder="ADM001" required/>
+            <Input label="Admission Number" name="admission number" value={formData.admission_number} onChange={handleChange} placeholder="e.g. ADM001" required />
             <Input label="First Name" name="first_name" value={formData.first_name} onChange={handleChange} placeholder="e.g. John" required />
             <Input label="Last Name" name="last_name" value={formData.last_name} onChange={handleChange} placeholder="e.g. Doe" required />
             <Input label="Date of Birth" name="date_of_birth" type="date" value={formData.date_of_birth} onChange={handleChange} required />
