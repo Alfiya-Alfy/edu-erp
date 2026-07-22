@@ -46,9 +46,10 @@ export const StudentForm = () => {
     setLoading(true);
     try {
       const res = await studentApi.getStudentById(id);
-      if (res.success) {
-        // Map the date to YYYY-MM-DD for the input type="date"
-        const data = res.data;
+
+const data = res.data?.data || res.data;
+
+if (data) {
         if (data.date_of_birth) {
           data.date_of_birth = new Date(data.date_of_birth).toISOString().split('T')[0];
         }
@@ -128,21 +129,47 @@ export const StudentForm = () => {
   const filteredBatches = batches.filter(b => b.institution_id === parseInt(formData.institution_id || 1));
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (isEdit) {
-        await studentApi.updateStudent(id, formData);
-        toast.success("Student updated successfully");
-      } else {
-        await studentApi.createStudent(formData);
-        toast.success("Student registered successfully");
-      }
-      navigate("/students");
-    } catch (err) {
-      console.error("Submit failed:", err);
-      toast.error(err.response?.data?.message || "Failed to save student record");
+  e.preventDefault();
+
+  console.log("Submitting Data:", formData);
+
+  if (!formData.institution_id) {
+    toast.error("Please select an institution");
+    return;
+  }
+
+  if (!formData.course_id) {
+    toast.error("Please select a course");
+    return;
+  }
+
+  if (!formData.batch_id) {
+    toast.error("Please select a batch");
+    return;
+  }
+
+  try {
+    if (isEdit) {
+      await studentApi.updateStudent(id, formData);
+      toast.success("Student updated successfully");
+    } else {
+      await studentApi.createStudent(formData);
+      toast.success("Student registered successfully");
     }
-  };
+
+    navigate("/students");
+
+  } catch (err) {
+    console.error("Submit failed:", err);
+
+    console.log("Backend Response:", err.response);
+
+    toast.error(
+      err.response?.data?.message ||
+      "Failed to save student record"
+    );
+  }
+};
 
   if (loading) {
     return (
@@ -183,7 +210,7 @@ export const StudentForm = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Input label="Admission Number" name="admission number" value={formData.admission_number} onChange={handleChange} placeholder="e.g. ADM001" required />
+            <Input label="Admission Number" name="admission_number" value={formData.admission_number} onChange={handleChange} placeholder="e.g. ADM001" required />
             <Input label="First Name" name="first_name" value={formData.first_name} onChange={handleChange} placeholder="e.g. John" required />
             <Input label="Last Name" name="last_name" value={formData.last_name} onChange={handleChange} placeholder="e.g. Doe" required />
             <Input label="Date of Birth" name="date_of_birth" type="date" value={formData.date_of_birth} onChange={handleChange} required />
