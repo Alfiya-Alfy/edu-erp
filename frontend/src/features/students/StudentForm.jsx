@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { Input } from "../../components/common/Input";
 import { Button } from "../../components/common/Button";
 import studentApi from "../../api/studentApi";
+import apiClient from "../../api/apiClient";
 
 export const StudentForm = () => {
   const navigate = useNavigate();
@@ -12,6 +13,10 @@ export const StudentForm = () => {
   const isEdit = Boolean(id);
 
   const [loading, setLoading] = useState(isEdit);
+  const [institutions, setInstitutions] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
+
   const [formData, setFormData] = useState({
     student_name: "",
     first_name: "",
@@ -53,7 +58,23 @@ export const StudentForm = () => {
     }
   }, [id, isEdit]);
 
+  const fetchDependencies = async () => {
+    try {
+      const [instRes, courseRes, batchRes] = await Promise.all([
+        apiClient.get('/institutions'),
+        apiClient.get('/courses'),
+        apiClient.get('/batches')
+      ]);
+      if (instRes.success) setInstitutions(instRes.data || []);
+      if (courseRes.success) setCourses(courseRes.data || []);
+      if (batchRes.success) setBatches(batchRes.data || []);
+    } catch (err) {
+      console.error("Failed to load dependencies:", err);
+    }
+  };
+
   useEffect(() => {
+    fetchDependencies();
     fetchStudentData();
   }, [fetchStudentData]);
 
@@ -66,9 +87,18 @@ export const StudentForm = () => {
       if (name === 'first_name' || name === 'last_name') {
         newData.student_name = `${newData.first_name} ${newData.last_name}`.trim();
       }
+      
+      // Reset course and batch if institution changes
+      if (name === 'institution_id') {
+        newData.course_id = "";
+        newData.batch_id = "";
+      }
       return newData;
     });
   };
+
+  const filteredCourses = courses.filter(c => c.institution_id === parseInt(formData.institution_id || 1));
+  const filteredBatches = batches.filter(b => b.institution_id === parseInt(formData.institution_id || 1));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -156,8 +186,35 @@ export const StudentForm = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Input label="Course ID" name="course_id" type="number" value={formData.course_id} onChange={handleChange} placeholder="e.g. 1" required />
-            <Input label="Batch ID" name="batch_id" type="number" value={formData.batch_id} onChange={handleChange} placeholder="e.g. 1" required />
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700 ml-1">Institution</label>
+              <select name="institution_id" value={formData.institution_id} onChange={handleChange} className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 sm:text-sm p-3.5 transition-all outline-none" required>
+                <option value="">Select Institution</option>
+                {institutions.map(inst => (
+                  <option key={inst.institution_id} value={inst.institution_id}>{inst.institution_name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700 ml-1">Course</label>
+              <select name="course_id" value={formData.course_id} onChange={handleChange} className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 sm:text-sm p-3.5 transition-all outline-none" required>
+                <option value="">Select Course</option>
+                {filteredCourses.map(course => (
+                  <option key={course.course_id} value={course.course_id}>{course.course_name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700 ml-1">Batch</label>
+              <select name="batch_id" value={formData.batch_id} onChange={handleChange} className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 sm:text-sm p-3.5 transition-all outline-none" required>
+                <option value="">Select Batch</option>
+                {filteredBatches.map(batch => (
+                  <option key={batch.batch_id} value={batch.batch_id}>{batch.batch_name}</option>
+                ))}
+              </select>
+            </div>
             
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-700 ml-1">Status</label>
