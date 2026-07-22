@@ -49,11 +49,21 @@ const getStudentById = async (req, res) => {
 const createStudent = async (req, res) => {
   try {
     const { 
-      student_name, institution_id, batch_id, course_id, email, phone_number, 
-      gender, address, first_name, last_name, city, state, pincode, blood_group, 
+      student_name, institution_id, batch_id, course_id, email, 
+      gender, address, first_name, last_name, city, state, blood_group, 
       graduation_status, status 
     } = req.body;
-    const dob = req.body.dob || req.body.date_of_birth || null;
+    const dob = req.body.dob || req.body.date_of_birth;
+    
+    // Clean phone number (remove non-digits)
+    const phone_number_str = req.body.phone_number ? req.body.phone_number.toString().replace(/\D/g, '') : null;
+    const phone_number = phone_number_str ? parseInt(phone_number_str, 10) : null;
+    
+    // Clean integer fields
+    const clean_batch_id = batch_id ? parseInt(batch_id, 10) : null;
+    const clean_course_id = course_id ? parseInt(course_id, 10) : null;
+    const clean_institution_id = institution_id ? parseInt(institution_id, 10) : null;
+    const clean_pincode = req.body.pincode ? parseInt(req.body.pincode, 10) : null;
     
     const [result] = await sequelize.query(
       `INSERT INTO students (
@@ -66,8 +76,23 @@ const createStudent = async (req, res) => {
        ) RETURNING *`,
       {
         replacements: { 
-          student_name, institution_id, batch_id, course_id, email, phone_number, dob, gender, address, 
-          first_name, last_name, city, state, pincode, blood_group, graduation_status, status 
+          student_name: student_name || '', 
+          institution_id: clean_institution_id, 
+          batch_id: clean_batch_id, 
+          course_id: clean_course_id, 
+          email: email || null, 
+          phone_number: phone_number, 
+          dob: dob || null, 
+          gender: gender || null, 
+          address: address || null, 
+          first_name: first_name || null, 
+          last_name: last_name || null, 
+          city: city || null, 
+          state: state || null, 
+          pincode: clean_pincode, 
+          blood_group: blood_group || null, 
+          graduation_status: graduation_status || 'Pursuing', 
+          status: status || 'active' 
         },
         type: QueryTypes.INSERT
       }
@@ -85,6 +110,16 @@ const updateStudent = async (req, res) => {
     updates.dob = updates.date_of_birth;
     delete updates.date_of_birth;
   }
+
+  // Clean integers and phone number if present
+  if (updates.phone_number !== undefined) {
+    updates.phone_number = updates.phone_number ? parseInt(updates.phone_number.toString().replace(/\D/g, ''), 10) || null : null;
+  }
+  if (updates.batch_id !== undefined) updates.batch_id = parseInt(updates.batch_id, 10) || null;
+  if (updates.course_id !== undefined) updates.course_id = parseInt(updates.course_id, 10) || null;
+  if (updates.institution_id !== undefined) updates.institution_id = parseInt(updates.institution_id, 10) || null;
+  if (updates.pincode !== undefined) updates.pincode = parseInt(updates.pincode, 10) || null;
+  if (updates.dob === "") updates.dob = null;
 
   // 1. Remove fields that don't exist in the 'students' table or shouldn't be updated manually
   const allowedFields = [
