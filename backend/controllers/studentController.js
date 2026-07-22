@@ -48,13 +48,27 @@ const getStudentById = async (req, res) => {
 
 const createStudent = async (req, res) => {
   try {
-    const { student_name, institution_id, batch_id, course_id, email, phone_number, gender, address, admission_number } = req.body;
+    const { 
+      student_name, institution_id, batch_id, course_id, email, phone_number, 
+      gender, address, first_name, last_name, city, state, pincode, blood_group, 
+      graduation_status, status 
+    } = req.body;
     const dob = req.body.dob || req.body.date_of_birth || null;
+    
     const [result] = await sequelize.query(
-      `INSERT INTO students (student_name, institution_id, batch_id, course_id, email, phone_number, dob, gender, address, admission_number)
-       VALUES (:student_name, :institution_id, :batch_id, :course_id, :email, :phone_number, :dob, :gender, :address, :admission_number) RETURNING *`,
+      `INSERT INTO students (
+        student_name, institution_id, batch_id, course_id, email, phone_number, dob, gender, address, 
+        first_name, last_name, city, state, pincode, blood_group, graduation_status, status
+       )
+       VALUES (
+        :student_name, :institution_id, :batch_id, :course_id, :email, :phone_number, :dob, :gender, :address, 
+        :first_name, :last_name, :city, :state, :pincode, :blood_group, :graduation_status, :status
+       ) RETURNING *`,
       {
-        replacements: { student_name, institution_id, batch_id, course_id, email, phone_number, dob, gender, address, admission_number },
+        replacements: { 
+          student_name, institution_id, batch_id, course_id, email, phone_number, dob, gender, address, 
+          first_name, last_name, city, state, pincode, blood_group, graduation_status, status 
+        },
         type: QueryTypes.INSERT
       }
     );
