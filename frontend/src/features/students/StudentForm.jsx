@@ -14,11 +14,15 @@ export const StudentForm = () => {
 
   const [loading, setLoading] = useState(isEdit);
   const [institutions, setInstitutions] = useState([]);
+  useEffect(() => {
+    console.log("Institutions => ", institutions);
+  }, [institutions]);
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
 
   const [formData, setFormData] = useState({
     student_name: "",
+    admission_number: "",
     first_name: "",
     last_name: "",
     email: "",
@@ -60,18 +64,39 @@ export const StudentForm = () => {
 
   const fetchDependencies = async () => {
     try {
-      const [instRes, courseRes, batchRes] = await Promise.all([
-        apiClient.get('/institutions'),
-        apiClient.get('/courses'),
-        apiClient.get('/batches')
-      ]);
-      if (instRes.success) setInstitutions(instRes.data || []);
-      if (courseRes.success) setCourses(courseRes.data || []);
-      if (batchRes.success) setBatches(batchRes.data || []);
+        const [instRes, courseRes, batchRes] = await Promise.all([
+            apiClient.get("/institutions"),
+            apiClient.get("/courses"),
+            apiClient.get("/batches"),
+        ]);
+
+        console.log("Institution Response", instRes);
+        console.log("Course Response", courseRes);
+        console.log("Batch Response", batchRes);
+
+        const institutionData =
+            instRes.data?.data ||
+            instRes.data ||
+            [];
+
+        const courseData =
+            courseRes.data?.data ||
+            courseRes.data ||
+            [];
+
+        const batchData =
+            batchRes.data?.data ||
+            batchRes.data ||
+            [];
+
+        setInstitutions(institutionData);
+        setCourses(courseData);
+        setBatches(batchData);
+
     } catch (err) {
-      console.error("Failed to load dependencies:", err);
+        console.error(err);
     }
-  };
+};
 
   useEffect(() => {
     fetchDependencies();
@@ -156,6 +181,7 @@ export const StudentForm = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Input label="Admission Number" name="admission number" value={formData.admission_number} onChange={handleChange} placeholder="ADM001" required/>
             <Input label="First Name" name="first_name" value={formData.first_name} onChange={handleChange} placeholder="e.g. John" required />
             <Input label="Last Name" name="last_name" value={formData.last_name} onChange={handleChange} placeholder="e.g. Doe" required />
             <Input label="Date of Birth" name="date_of_birth" type="date" value={formData.date_of_birth} onChange={handleChange} required />
@@ -188,7 +214,9 @@ export const StudentForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-700 ml-1">Institution</label>
-              <select name="institution_id" value={formData.institution_id} onChange={handleChange} className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 sm:text-sm p-3.5 transition-all outline-none" required>
+              <select name="institution_id" value={formData.institution_id} onChange={handleChange}
+              required
+              className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 sm:text-sm p-3.5 transition-all outline-none">
                 <option value="">Select Institution</option>
                 {institutions.map(inst => (
                   <option key={inst.institution_id} value={inst.institution_id}>{inst.institution_name}</option>
