@@ -171,8 +171,8 @@ export const StudentForm = () => {
               <label className="block text-sm font-semibold text-gray-700 ml-1">Graduation Status</label>
               <select name="graduation_status" value={formData.graduation_status} onChange={handleChange} className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 sm:text-sm p-3.5 transition-all outline-none">
                 <option value="Pursuing">Pursuing</option>
-                <option value="Completed">Completed</option>
-                <option value="Dropped">Dropped</option>
+                <option value="Yes">Completed (Yes)</option>
+                <option value="No">Dropped (No)</option>
               </select>
             </div>
           </div>
