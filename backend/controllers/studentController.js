@@ -51,7 +51,7 @@ const createStudent = async (req, res) => {
     const { 
       student_name, institution_id, batch_id, course_id, email, 
       gender, address, first_name, last_name, city, state, blood_group, 
-      graduation_status, status 
+      graduation_status, status, admission_number 
     } = req.body;
     const dob = req.body.dob || req.body.date_of_birth;
     
@@ -65,6 +65,8 @@ const createStudent = async (req, res) => {
     const clean_institution_id = institution_id ? parseInt(institution_id, 10) : null;
     const clean_pincode = req.body.pincode ? parseInt(req.body.pincode, 10) : null;
     
+    const computed_name = student_name || `${first_name || ''} ${last_name || ''}`.trim() || 'New Student';
+
     const [result] = await sequelize.query(
       `INSERT INTO students (
         student_name, institution_id, batch_id, course_id, email, phone_number, dob, gender, address, 
@@ -76,7 +78,7 @@ const createStudent = async (req, res) => {
        ) RETURNING *`,
       {
         replacements: { 
-          student_name: student_name || '', 
+          student_name: computed_name, 
           institution_id: clean_institution_id, 
           batch_id: clean_batch_id, 
           course_id: clean_course_id, 
@@ -97,7 +99,32 @@ const createStudent = async (req, res) => {
         type: QueryTypes.INSERT
       }
     );
-    res.status(201).json({ success: true, data: result[0] });
+
+    const newStudent = result[0];
+
+    if (admission_number && newStudent?.student_id) {
+      try {
+        const clean_adm_num = parseInt(admission_number.toString().replace(/\D/g, ''), 10);
+        await sequelize.query(
+          `INSERT INTO admission (student_id, institution_id, course_id, batch_id, admission_number, admission_date, admission_status)
+           VALUES (:student_id, :institution_id, :course_id, :batch_id, :admission_number, CURRENT_DATE, 'Admitted')`,
+          {
+            replacements: {
+              student_id: newStudent.student_id,
+              institution_id: clean_institution_id,
+              course_id: clean_course_id,
+              batch_id: clean_batch_id,
+              admission_number: isNaN(clean_adm_num) ? null : clean_adm_num
+            },
+            type: QueryTypes.INSERT
+          }
+        );
+      } catch (admErr) {
+        console.error("Failed to record admission details:", admErr.message);
+      }
+    }
+
+    res.status(201).json({ success: true, data: newStudent });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }

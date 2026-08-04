@@ -125,8 +125,9 @@ if (data) {
         return newData;
     });
 };
-  const filteredCourses = courses.filter(c => c.institution_id === parseInt(formData.institution_id || 1));
-  const filteredBatches = batches.filter(b => b.institution_id === parseInt(formData.institution_id || 1));
+  const currentInstId = formData.institution_id ? parseInt(formData.institution_id, 10) : null;
+  const filteredCourses = courses.filter(c => !currentInstId || parseInt(c.institution_id, 10) === currentInstId);
+  const filteredBatches = batches.filter(b => !currentInstId || parseInt(b.institution_id, 10) === currentInstId);
 
   const handleSubmit = async (e) => {
   e.preventDefault();
@@ -247,9 +248,13 @@ if (data) {
               required
               className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 sm:text-sm p-3.5 transition-all outline-none">
                 <option value="">Select Institution</option>
-                {institutions.map(inst => (
-                  <option key={inst.institution_id} value={inst.institution_id}>{inst.institution_name}</option>
-                ))}
+                {institutions.map(inst => {
+                  const instId = inst.institution_id || inst.id;
+                  const instName = inst.institution_name || inst.name;
+                  return (
+                    <option key={instId} value={instId}>{instName}</option>
+                  );
+                })}
               </select>
             </div>
             
@@ -257,9 +262,13 @@ if (data) {
               <label className="block text-sm font-semibold text-gray-700 ml-1">Course</label>
               <select name="course_id" value={formData.course_id} onChange={handleChange} className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 sm:text-sm p-3.5 transition-all outline-none" required>
                 <option value="">Select Course</option>
-                {filteredCourses.map(course => (
-                  <option key={course.course_id} value={course.course_id}>{course.course_name}</option>
-                ))}
+                {filteredCourses.map(course => {
+                  const cId = course.course_id || course.id;
+                  const cName = course.course_name || course.name;
+                  return (
+                    <option key={cId} value={cId}>{cName}</option>
+                  );
+                })}
               </select>
             </div>
             
@@ -267,9 +276,13 @@ if (data) {
               <label className="block text-sm font-semibold text-gray-700 ml-1">Batch</label>
               <select name="batch_id" value={formData.batch_id} onChange={handleChange} className="block w-full rounded-xl border border-gray-200 bg-gray-50/50 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 sm:text-sm p-3.5 transition-all outline-none" required>
                 <option value="">Select Batch</option>
-                {filteredBatches.map(batch => (
-                  <option key={batch.batch_id} value={batch.batch_id}>{batch.batch_name}</option>
-                ))}
+                {filteredBatches.map(batch => {
+                  const bId = batch.batch_id || batch.id;
+                  const bName = batch.batch_name || batch.name;
+                  return (
+                    <option key={bId} value={bId}>{bName}</option>
+                  );
+                })}
               </select>
             </div>
             
