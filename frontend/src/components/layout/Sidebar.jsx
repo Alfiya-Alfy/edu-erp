@@ -105,7 +105,7 @@ export default function Sidebar() {
                         <GraduationCap size={22} color="white" strokeWidth={2.5} />
                     </div>
                     <div>
-                        <p style={{ fontWeight: 800, color: 'white', fontSize: '18px', lineHeight: 1, letterSpacing: '-0.02em' }}>Edu<span style={{ color: '#3b82f6' }}>ERP</span></p>
+                        <p style={{ fontWeight: 800, color: 'white', fontSize: '18px', lineHeight: 1, letterSpacing: '-0.02em' }}>DX3<span style={{ color: '#3b82f6' }}> EDU ERP</span></p>
                         <p style={{ color: '#64748b', fontSize: '10px', fontWeight: 700, marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Unified Platform</p>
                     </div>
                 </div>

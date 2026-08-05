@@ -324,7 +324,7 @@ const AttendancePage = () => {
                         <p className="text-sm font-bold leading-relaxed mb-6">
                             Marking attendance daily helps in generating accurate performance and behavioral reports for students.
                         </p>
-                        <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white hover:text-primary transition-all">View History</Button>
+                        <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white hover:text-primary transition-all" onClick={() => addToast("Detailed history will be available in the reports module soon.", "info")}>View History</Button>
                     </div>
                 </div>
             </div>

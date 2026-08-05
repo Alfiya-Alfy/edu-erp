@@ -70,7 +70,7 @@ const Signup = () => {
               <div className="p-2.5 bg-primary rounded-xl shadow-lg shadow-primary/20">
                 <GraduationCap size={28} />
               </div>
-              <span className="text-2xl font-black tracking-tight leading-none pt-1">Edu<span className="text-primary">ERP</span></span>
+              <span className="text-2xl font-black tracking-tight leading-none pt-1">DX3<span className="text-primary"> EDU ERP</span></span>
             </div>
 
             <div className="space-y-6 max-w-sm">
