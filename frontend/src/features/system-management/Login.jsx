@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { GraduationCap, Building2, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { GraduationCap, Building2, Mail, Lock, ArrowRight, Loader2, Users } from 'lucide-react';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
@@ -13,8 +13,17 @@ const Login = () => {
   const { login, institutions } = useAuth();
   const { addToast } = useToast();
   const [institutionId, setInstitutionId] = useState('');
+  const [roleId, setRoleId] = useState(''); // Empty means auto-detect based on email
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  const ROLES = [
+    { id: '', name: 'Auto-detect Role' },
+    { id: '4', name: 'Student' },
+    { id: '3', name: 'Teacher' },
+    { id: '2', name: 'Institution Admin' },
+    { id: '1', name: 'Super Admin' }
+  ];
   const location = useLocation();
 
   useEffect(() => {
@@ -27,7 +36,7 @@ const Login = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const result = await login(email, password, institutionId);
+      const result = await login(email, password, institutionId, roleId);
       if (result.success) {
         addToast('Welcome back! Login successful.', 'success');
         const origin = location.state?.from?.pathname || '/';
@@ -104,6 +113,14 @@ const Login = () => {
               options={institutions}
               loading={!institutions || institutions.length === 0}
               required
+            />
+
+            <Select 
+              label="Select Role (Optional)" 
+              icon={Users}
+              value={roleId}
+              onChange={(e) => setRoleId(e.target.value)}
+              options={ROLES}
             />
 
             <Input 

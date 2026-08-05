@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { GraduationCap, Building2, Mail, Lock, User, ArrowRight, ShieldCheck } from 'lucide-react';
+import { GraduationCap, Building2, Mail, Lock, User, ArrowRight, ShieldCheck, Users } from 'lucide-react';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
@@ -14,7 +14,15 @@ const Signup = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [institutionId, setInstitutionId] = useState('');
+  const [roleId, setRoleId] = useState('4'); // Default to Student
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const ROLES = [
+    { id: '4', name: 'Student' },
+    { id: '3', name: 'Teacher' },
+    { id: '2', name: 'Institution Admin' },
+    { id: '1', name: 'Super Admin' }
+  ];
 
   // Handle setting default institution when they load
   useEffect(() => {
@@ -29,7 +37,7 @@ const Signup = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const result = await signup(email, password, name, institutionId);
+      const result = await signup(email, password, name, institutionId, roleId);
       if (result.success) {
         addToast('Registration successful! Welcome to the system.', 'success');
         navigate('/');
@@ -121,6 +129,15 @@ const Signup = () => {
               required
             />
 
+            <Select 
+              label="Select Role" 
+              icon={Users}
+              value={roleId}
+              onChange={(e) => setRoleId(e.target.value)}
+              options={ROLES}
+              required
+            />
+
             <Input 
               label="Password" 
               type="password" 
@@ -144,7 +161,7 @@ const Signup = () => {
               icon={ArrowRight}
               loading={isSubmitting}
             >
-              Create Administrator Account
+              Create Account
             </Button>
           </form>
 

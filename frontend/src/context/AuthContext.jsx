@@ -78,12 +78,13 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = async (email, password, institutionId) => {
+  const login = async (email, password, institutionId, roleId) => {
     try {
       const data = await apiClient.post('/auth/login', { 
         email, 
         password, 
-        institution_id: institutionId 
+        institution_id: institutionId,
+        role_id: roleId ? parseInt(roleId, 10) : undefined
       });
 
       if (data.success) {
@@ -95,7 +96,7 @@ export const AuthProvider = ({ children }) => {
         
         // Handle institution selection
         const instId = data.user.institution_id || institutionId;
-        const inst = institutions.find(i => i.id === instId);
+        const inst = institutions.find(i => i.id === instId || i.institution_id === instId);
         if (inst) {
           setCurrentInstitution(inst);
           localStorage.setItem('currentInstitution', JSON.stringify(inst));
@@ -119,7 +120,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const switchInstitution = (instId) => {
-    const inst = institutions.find(i => i.id === instId);
+    const inst = institutions.find(i => i.id === instId || i.institution_id === instId);
     if (inst) {
       setCurrentInstitution(inst);
       localStorage.setItem('currentInstitution', JSON.stringify(inst));
@@ -127,11 +128,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signup = async (email, password, name, institutionId) => {
+  const signup = async (email, password, name, institutionId, roleId) => {
     try {
-      const data = await apiClient.post('/auth/signup', { email, password, name, institution_id: institutionId });
+      const data = await apiClient.post('/auth/signup', { 
+        email, 
+        password, 
+        name, 
+        institution_id: institutionId,
+        role_id: roleId ? parseInt(roleId, 10) : undefined
+      });
       if (data.success) {
-        return login(email, password, institutionId);
+        setUser(data.user);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.token);
+        return { success: true };
       }
       return { success: false, message: data.message };
     } catch (err) {

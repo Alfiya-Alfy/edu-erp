@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, Globe, Bell, Shield, Database, Cloud, Mail, Search, Plus, RefreshCw, Activity } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import apiClient from '../../api/apiClient';
 import Button from '../../components/common/Button';
 import Table from '../../components/common/Table';
@@ -8,10 +9,14 @@ import Input from '../../components/common/Input';
 
 const Settings = () => {
   const { addToast } = useToast();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [configLogs, setConfigLogs] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('General');
+
+  const userRole = user?.role_name || user?.role;
+  const isSuperAdmin = userRole === 'Super Admin';
 
   const tabs = [
     { name: 'General', icon: SettingsIcon },
@@ -182,13 +187,15 @@ const Settings = () => {
             />
           </div>
 
-          <div className="bg-rose-50 p-8 rounded-[40px] border border-rose-100/50 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-1">
-              <h3 className="text-lg font-black text-rose-600">Enterprise Mode Maintenance</h3>
-              <p className="text-xs font-bold text-rose-500/60 leading-tight">Restrict system access to Super Admins only for maintenance.</p>
+          {isSuperAdmin && (
+            <div className="bg-rose-50 p-8 rounded-[40px] border border-rose-100/50 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-1">
+                <h3 className="text-lg font-black text-rose-600">Enterprise Mode Maintenance</h3>
+                <p className="text-xs font-bold text-rose-500/60 leading-tight">Restrict system access to Super Admins only for maintenance.</p>
+              </div>
+              <Button variant="danger" size="sm">Enable Restriction</Button>
             </div>
-            <Button variant="danger" size="sm">Enable Restriction</Button>
-          </div>
+          )}
         </div>
       </div>
     </div>

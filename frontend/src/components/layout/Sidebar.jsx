@@ -6,62 +6,77 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-const menuGroups = [
-  {
-    title: 'Core',
-    items: [
-      { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    ]
-  },
-  {
-    title: 'Academic',
-    items: [
-      { label: 'Students', path: '/students', icon: Users },
-      { label: 'Admissions', path: '/admissions', icon: GraduationCap },
-      { label: 'Parents', path: '/parents', icon: Users },
-      { label: 'Attendance', path: '/attendance/student', icon: UserCheck },
-      { label: 'Staff', path: '/staff', icon: Users },
-      { label: 'Courses', path: '/courses', icon: Book },
-      { label: 'Batches', path: '/batches', icon: Layers },
-      { label: 'Communications', path: '/communications', icon: FileText },
-    ]
-  },
-  {
-    title: 'Finance',
-    items: [
-      { label: 'Payments', path: '/finance/payments', icon: CreditCard },
-      { label: 'Fee Structure', path: '/finance/fees', icon: BookOpen },
-      { label: 'Certificates', path: '/finance/certificates', icon: Award },
-      { label: 'TC', path: '/finance/tc', icon: FileText },
-    ]
-  },
-  {
-    title: 'Placement',
-    items: [
-      { label: 'Placements', path: '/placements', icon: Briefcase },
-    ]
-  },
-  {
-    title: 'System Management',
-    items: [
-      { label: 'Institutions', path: '/settings/institution', icon: Building2 },
-      { label: 'Users', path: '/settings/users', icon: Users },
-      { label: 'Roles', path: '/settings/roles', icon: Shield },
-      { label: 'Merge Logs', path: '/advanced/merge-log', icon: Activity },
-    ]
-  },
-  {
-    title: 'Other',
-    items: [
-      { label: 'Reports', path: '/reports', icon: BarChart3 },
-      { label: 'Profile', path: '/settings/profile', icon: Settings },
-    ]
-  }
-];
+const getMenuGroups = (role) => {
+  const groups = [
+    {
+      title: 'Core',
+      items: [
+        { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+      ]
+    },
+    {
+      title: 'Academic',
+      items: [
+        { label: 'Students', path: '/students', icon: Users, roles: ['Super Admin', 'Institution Admin', 'Teacher'] },
+        { label: 'Admissions', path: '/admissions', icon: GraduationCap, roles: ['Super Admin', 'Institution Admin'] },
+        { label: 'Parents', path: '/parents', icon: Users, roles: ['Super Admin', 'Institution Admin', 'Teacher'] },
+        { label: 'Attendance', path: '/attendance/student', icon: UserCheck, roles: ['Super Admin', 'Institution Admin', 'Teacher', 'Student'] },
+        { label: 'Staff', path: '/staff', icon: Users, roles: ['Super Admin', 'Institution Admin'] },
+        { label: 'Courses', path: '/courses', icon: Book, roles: ['Super Admin', 'Institution Admin', 'Teacher', 'Student'] },
+        { label: 'Batches', path: '/batches', icon: Layers, roles: ['Super Admin', 'Institution Admin', 'Teacher', 'Student'] },
+        { label: 'Communications', path: '/communications', icon: FileText, roles: ['Super Admin', 'Institution Admin', 'Teacher'] },
+      ]
+    },
+    {
+      title: 'Finance',
+      roles: ['Super Admin', 'Institution Admin'],
+      items: [
+        { label: 'Payments', path: '/finance/payments', icon: CreditCard },
+        { label: 'Fee Structure', path: '/finance/fees', icon: BookOpen },
+        { label: 'Certificates', path: '/finance/certificates', icon: Award },
+        { label: 'TC', path: '/finance/tc', icon: FileText },
+      ]
+    },
+    {
+      title: 'Placement',
+      items: [
+        { label: 'Placements', path: '/placements', icon: Briefcase, roles: ['Super Admin', 'Institution Admin', 'Teacher', 'Student'] },
+      ]
+    },
+    {
+      title: 'System Management',
+      roles: ['Super Admin', 'Institution Admin'],
+      items: [
+        { label: 'Institutions', path: '/settings/institution', icon: Building2 },
+        { label: 'Users', path: '/settings/users', icon: Users },
+        { label: 'Roles', path: '/settings/roles', icon: Shield },
+        { label: 'Merge Logs', path: '/advanced/merge-log', icon: Activity },
+      ]
+    },
+    {
+      title: 'Other',
+      items: [
+        { label: 'Reports', path: '/reports', icon: BarChart3, roles: ['Super Admin', 'Institution Admin'] },
+        { label: 'Profile', path: '/settings/profile', icon: Settings }, // All roles can access profile
+      ]
+    }
+  ];
+
+  return groups
+    .filter(group => !group.roles || group.roles.includes(role))
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item => !item.roles || item.roles.includes(role))
+    }))
+    .filter(group => group.items.length > 0);
+};
 
 export default function Sidebar() {
     const navigate = useNavigate();
     const { logout, user } = useAuth();
+    
+    const userRole = user?.role_name || user?.role || 'Student'; // Default to a safe role if not found
+    const filteredMenuGroups = getMenuGroups(userRole);
 
     const handleLogout = () => {
         logout();
@@ -98,7 +113,7 @@ export default function Sidebar() {
 
             {/* Nav sections */}
             <nav style={{ flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '20px', overflowY: 'auto' }} className="custom-scrollbar">
-                {menuGroups.map((group) => (
+                {filteredMenuGroups.map((group) => (
                     <div key={group.title}>
                         <p style={{ padding: '0 12px 8px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#475569' }}>
                             {group.title}

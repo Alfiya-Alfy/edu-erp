@@ -1,5 +1,6 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import Layout from "../components/layout/Layout";
+import { RoleGuard } from "../components/common/RoleGuard";
 
 // Feature Imports
 import { StudentList } from "../features/students/StudentList";
@@ -77,12 +78,27 @@ export const routes = [
         ]
       },
 
-      { path: "staff", element: <StaffList /> },
-      { path: "staff/new", element: <StaffForm /> },
-      { path: "staff/edit/:id", element: <StaffForm /> },
+      { 
+        path: "staff", 
+        element: (
+          <RoleGuard allowedRoles={['Super Admin', 'Institution Admin']}>
+            <Outlet />
+          </RoleGuard>
+        ),
+        children: [
+          { index: true, element: <StaffList /> },
+          { path: "new", element: <StaffForm /> },
+          { path: "edit/:id", element: <StaffForm /> }
+        ]
+      },
 
       {
         path: "finance",
+        element: (
+          <RoleGuard allowedRoles={['Super Admin', 'Institution Admin']}>
+            <Outlet />
+          </RoleGuard>
+        ),
         children: [
           { path: "fees", element: <FeeStructure /> },
           { path: "payments", element: <Payments /> },
@@ -98,6 +114,11 @@ export const routes = [
 
       {
         path: "settings",
+        element: (
+          <RoleGuard allowedRoles={['Super Admin', 'Institution Admin']}>
+            <Outlet />
+          </RoleGuard>
+        ),
         children: [
           { path: "institution", element: <Institutions /> },
           { path: "users", element: <Users /> },
